@@ -1,0 +1,47 @@
+/*!
+ * @brief Tiny C++ wrapper on the pure ANSI-C command-line parsing library Argtable3
+ * https://www.argtable.org (https://github.com/argtable/argtable3)
+ * Header Include file
+ * 	@file	argtable
+ *	@author	(Solomatov A.A. (aso)
+ *	@date Created 08.10.2024
+ *	      Updated 10.10.2024
+ *	@version 0.1
+ */
+
+
+
+#ifndef __ARGTABLE3_CPP__
+#define __ARGTABLE3_CPP__
+
+
+#ifndef __cplusplus
+#error "'arctable' file is usable in C++ projects only."
+#endif
+
+#ifndef ARGTABLE3
+#error "Need include the 'arctable.h' file from the Arctable3 library before this header file"
+#endif
+
+
+// C++ wrapper for definition arctable functionality
+class Argtable
+{
+public:
+    Argtable(int mxerrs = 20);	 ///< default constructor
+    ~Argtable(); ///< destructor
+
+    /// Add new item in argtable
+    esp_err_t addoption(void*);
+    void** data() { return stor.data(); };
+
+protected:
+
+    std::vector<void*> stor;
+
+}; /* Argtable */
+
+
+#endif // __ARGTABLE3_CPP__
+
+//--[ argtable ]-------------------------------------------------------------------------------------------------------
