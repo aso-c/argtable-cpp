@@ -24,22 +24,326 @@
 #endif
 
 
-// C++ wrapper for definition arctable functionality
-class Argtable
+
+
+#if 0
+/*
+ * The arg_hdr struct defines properties that are common to all arg_xxx structs.
+ * The argtable library requires each arg_xxx struct to have an arg_hdr
+ * struct as its first data member.
+ * The argtable library functions then use this data to identify the
+ * properties of the command line option, such as its option tags,
+ * datatype string, and glossary strings, and so on.
+ * Moreover, the arg_hdr struct contains pointers to custom functions that
+ * are provided by each arg_xxx struct which perform the tasks of parsing
+ * that particular arg_xxx arguments, performing post-parse checks, and
+ * reporting errors.
+ * These functions are private to the individual arg_xxx source code
+ * and are the pointer to them are initiliased by that arg_xxx struct's
+ * constructor function. The user could alter them after construction
+ * if desired, but the original intention is for them to be set by the
+ * constructor and left unaltered.
+ */
+typedef struct arg_hdr {
+    char flag;             /* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
+    const char* shortopts; /* String defining the short options */
+    const char* longopts;  /* String defiing the long options */
+    const char* datatype;  /* Description of the argument data type */
+    const char* glossary;  /* Description of the option as shown by arg_print_glossary function */
+    int mincount;          /* Minimum number of occurences of this option accepted */
+    int maxcount;          /* Maximum number of occurences if this option accepted */
+    void* parent;          /* Pointer to parent arg_xxx struct */
+    arg_resetfn* resetfn;  /* Pointer to parent arg_xxx reset function */
+    arg_scanfn* scanfn;    /* Pointer to parent arg_xxx scan function */
+    arg_checkfn* checkfn;  /* Pointer to parent arg_xxx check function */
+    arg_errorfn* errorfn;  /* Pointer to parent arg_xxx error function */
+    void* priv;            /* Pointer to private header data for use by arg_xxx functions */
+} arg_hdr_t;
+#endif
+
+namespace Arg
 {
-public:
-    Argtable(int mxerrs = 20);	 ///< default constructor
-    ~Argtable(); ///< destructor
 
-    /// Add new item in argtable
-    esp_err_t addoption(void*);
-    void** data() { return stor.data(); };
+    /// Abstract virtual class for store/pointing to specific Arg::table items
+    struct item
+    {
+	/// Get stored hdr field
+	virtual arg_hdr& header() = 0;
+	const arg_hdr& header() const;
+	virtual item* clone() const = 0;	///< Clone object of the derived from the Arg::item type
+	/// Set stored hdr field
+	void header(const item& it) { header(it.header()); };
+	void header(const arg_hdr&);
+	void header(arg_hdr&&);
+	virtual ~item() {};
 
-protected:
+    protected:
+	static void set_hdr(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
+	static void set_hdr(arg_hdr& dest, arg_hdr&& tsrc);	///< move values of temporary "tsrs" to the "dest"
+    }; /* Arg::item */
 
-    std::vector<void*> stor;
 
-}; /* Argtable */
+
+#if 0
+typedef struct arg_rem {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+} arg_rem_t;
+#endif
+
+    struct rem: public item, public arg_rem
+    {
+	/// copy constructor
+	rem(const arg_rem&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	rem(arg_rem* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::rem */
+
+
+
+#if 0
+typedef struct arg_lit {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+} arg_lit_t;
+#endif
+
+    struct lit: public item, public arg_lit
+    {
+	/// copy constructor
+	lit(const arg_lit&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	lit(arg_lit* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::lit */
+
+
+
+#if 0
+typedef struct arg_int {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    int* ival;          /* Array of parsed argument values */
+} arg_int_t;
+#endif
+
+    struct integer: public item, public arg_int
+    {
+	/// copy constructor
+	integer(const arg_int&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	integer(arg_int* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::integer */
+
+
+
+#if 0
+typedef struct arg_dbl {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    double* dval;       /* Array of parsed argument values */
+} arg_dbl_t;
+#endif
+
+    struct dbl: public item, public arg_dbl
+    {
+	/// copy constructor
+	dbl(const arg_dbl&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	dbl(arg_dbl* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::dbl */
+
+
+
+#if 0
+typedef struct arg_str {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    const char** sval;  /* Array of parsed argument values */
+} arg_str_t;
+#endif
+
+    struct str: public item, public arg_str
+    {
+	/// copy constructor
+	str(const arg_str&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	str(arg_str* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::str */
+
+
+
+#if 0
+typedef struct arg_rex {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    const char** sval;  /* Array of parsed argument values */
+} arg_rex_t;
+#endif
+
+    struct rex: public item, public arg_rex
+    {
+	/// copy constructor
+	rex(const arg_rex&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	rex(arg_rex* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::rex */
+
+
+
+#if 0
+typedef struct arg_file {
+    struct arg_hdr hdr;     /* The mandatory argtable header struct */
+    int count;              /* Number of matching command line args*/
+    const char** filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
+    const char** basename;  /* Array of parsed basenames  (eg: foo.bar) */
+    const char** extension; /* Array of parsed extensions (eg: .bar) */
+} arg_file_t;
+#endif
+
+    struct file: public item, public arg_file
+    {
+	/// copy constructor
+	file(const arg_file&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	file(arg_file* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::file */
+
+
+
+#if 0
+typedef struct arg_date {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    const char* format; /* strptime format string used to parse the date */
+    int count;          /* Number of matching command line args */
+    struct tm* tmval;   /* Array of parsed time values */
+} arg_date_t;
+#endif
+
+    struct date: public item, public arg_date
+    {
+	/// copy constructor
+	date(const arg_date&);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	date(arg_date* &&);
+	/// Get stored hdr field
+	arg_hdr& header() override;
+
+    }; /* struct Arg::date */
+
+
+
+#if 0
+enum { ARG_ELIMIT = 1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG };
+typedef struct arg_end {
+    struct arg_hdr hdr;  /* The mandatory argtable header struct */
+    int count;           /* Number of errors encountered */
+    int* error;          /* Array of error codes */
+    void** parent;       /* Array of pointers to offending arg_xxx struct */
+    const char** argval; /* Array of pointers to offending argv[] string */
+} arg_end_t;
+#endif
+
+    struct end: public item, public arg_end
+    {
+	/// copy constructor for long lifetime lvalue pointer
+	end(const arg_end* arg_end)/*: end(*arg) {}*/;
+	/// move constructor for temporary rvalue pointer to deallocable object
+	end(arg_end* && arg): end(arg) {delete arg;};
+	/// copy constructor
+	end(const end& arg): end(static_cast<const arg_end*>(&arg)) {};
+	/// Get stored hdr field
+	arg_hdr& header() override;
+	/// clone the Arg::end instance into allocated memory object
+	end* clone() const override;
+	/// assignment the value from other item
+	end& assign(const arg_end&);
+	end& assign(const end& arg) {return assign(static_cast<arg_end>(arg));};
+	end& operator = (const arg_end& otharg) { return assign(otharg); };
+	end& operator = (const end& other) { return assign(other); };
+
+    }; /* struct Arg::end */
+
+
+
+    struct cmd
+    {
+//	cmd(item* const);	///< Initializing the Arg::cmd with l-value, long lifetime pointer
+	cmd(item* &&);		///< Initializing the Arg::cmd with temporary lifetime pointer
+	cmd(const cmd&);	///< Initializing the Arg::cmd with l-value, long lifetime ref
+	cmd(cmd&& );		///< Initializing the Arg::cmd with temporary lifetime - rvalue ref
+	~cmd() {delete arg;};
+
+	cmd& assign(cmd&& other) { swap(other); return *this; };
+	cmd& assign(const cmd& other);
+	cmd& assign(item* &&otharg) { arg = otharg; return *this; };
+	cmd& assign(const item* otharg);
+
+//	cmd& operator = (cmd&& other) { return assign(std::move(other)); };
+//	cmd& operator = (const cmd& other) { return assign(other); };
+//	cmd& operator = (item* &&otharg) { return assign(std::move(otharg)); };
+//	cmd& operator = (const item* otharg) { return assign(otharg); };
+
+	template <typename T>
+	cmd& operator = (T&& other) { return assign(std::forward<T>(other)); };
+
+	/// swap the args
+	void swap(cmd&) noexcept;
+
+    protected:
+	item* arg = nullptr;
+    }; /* struct Arg::cmd */
+
+
+
+
+//    template<typename arg_end*>
+//    std::list(int, arg_end*) -> std::list<cmd>(int, Arg::end)
+
+    // C++ wrapper for definition arctable functionality
+    class table
+    {
+    public:
+	table(int mxerrs = 20);	 ///< default constructor
+	~table(); ///< destructor
+
+	/// Add new item in argtable
+//	esp_err_t addoption(void*);
+//	esp_err_t add(cmd&&);
+	template <typename C>
+	esp_err_t add(C&& c);
+
+
+//	void** data() /*{ return stor.data(); }*/;
+	std::vector<void*> data() /*{ return stor.data(); }*/;
+
+    protected:
+
+//	std::vector<void*> stor;
+	std::list<cmd> stor;
+
+    }; /* table */
+
+}; /* namespace Arg*/
 
 
 #endif // __ARGTABLE3_CPP__
