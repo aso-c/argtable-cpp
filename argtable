@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 10.10.2024
- *	@version 0.1
+ *	      Updated 22.10.2024
+ *	@version 0.3
  */
 
 
@@ -15,6 +15,8 @@
 #define __ARGTABLE3_CPP__
 
 
+#include "argtable3/argtable3.h"
+#include <list>
 #ifndef __cplusplus
 #error "'arctable' file is usable in C++ projects only."
 #endif
@@ -24,6 +26,8 @@
 #endif
 
 
+namespace Arg
+{
 
 
 #if 0
@@ -61,8 +65,19 @@ typedef struct arg_hdr {
 } arg_hdr_t;
 #endif
 
-namespace Arg
-{
+
+    struct header: public arg_hdr
+    {
+	header& assign(const arg_hdr& hdr) {set(*this, hdr); return *this;};
+//	header& assign(const header& hdr) {set(*this, static_cast<const arg_hdr&>(hdr)); return *this;};
+	header& assign(const arg_hdr&& hdr) {set(*this, hdr); return *this;};
+//	header& assign(const header&& hdr) {set(*this, static_cast<arg_hdr&&>(hdr)); return *this;};
+
+	static void set(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
+	static void set(arg_hdr& dest, arg_hdr&& tsrc);		///< move values of temporary "tsrs" to the "dest"
+    }; /* arg_hdr */
+
+
 
     /// Abstract virtual class for store/pointing to specific Arg::table items
     struct item
@@ -78,9 +93,34 @@ namespace Arg
 	virtual ~item() {};
 
     protected:
-	static void set_hdr(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
-	static void set_hdr(arg_hdr& dest, arg_hdr&& tsrc);	///< move values of temporary "tsrs" to the "dest"
+//	static void set_hdr(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
+//	static void set_hdr(arg_hdr& dest, arg_hdr&& tsrc);	///< move values of temporary "tsrs" to the "dest"
     }; /* Arg::item */
+
+
+
+    // Any kind of specific argtable3 items
+    template <class kind>
+    struct unit: public item, public kind
+    {
+	/// copy constructor for long lifetime lvalue pointer
+	unit(const kind* arg);
+	/// move constructor for temporary rvalue pointer to deallocable object
+	unit(kind* && arg): unit(arg) { delete arg; };
+	/// copy constructor
+	unit(const unit& arg): unit(static_cast<const kind*>(&arg)) {};
+	/// Get stored hdr field
+	arg_hdr& header() override { return kind::hdr; };
+	/// clone the Arg::end instance into allocated memory object
+	unit* clone() const override;
+	/// assignment the value from other item
+	unit& assign(const kind&);
+	unit& assign(const unit& arg) {return assign(static_cast<kind>(arg));};
+	unit& operator = (const kind& otharg) { return assign(otharg); };
+	unit& operator = (const unit& other)  { return assign(other); };
+
+    }; /* template class Arg::unit  */
+
 
 
 
@@ -266,7 +306,7 @@ typedef struct arg_end {
     struct end: public item, public arg_end
     {
 	/// copy constructor for long lifetime lvalue pointer
-	end(const arg_end* arg_end)/*: end(*arg) {}*/;
+	end(const arg_end* arg);
 	/// move constructor for temporary rvalue pointer to deallocable object
 	end(arg_end* && arg): end(arg) {delete arg;};
 	/// copy constructor
@@ -314,10 +354,10 @@ typedef struct arg_end {
     }; /* struct Arg::cmd */
 
 
-
-
 //    template<typename arg_end*>
 //    std::list(int, arg_end*) -> std::list<cmd>(int, Arg::end)
+
+    using iterator = std::list<cmd>::iterator;
 
     // C++ wrapper for definition arctable functionality
     class table
@@ -330,7 +370,7 @@ typedef struct arg_end {
 //	esp_err_t addoption(void*);
 //	esp_err_t add(cmd&&);
 	template <typename C>
-	esp_err_t add(C&& c);
+	iterator add(C&& c);
 
 
 //	void** data() /*{ return stor.data(); }*/;

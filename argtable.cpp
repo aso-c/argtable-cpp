@@ -5,8 +5,8 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 10.10.2024
- *	@version 0.1
+ *	      Updated 22.10.2024
+ *	@version 0.3
  */
 
 
@@ -73,7 +73,7 @@ typedef struct arg_hdr {
 // virtual void Arg::header(const arg_hdr&) = 0;
 
 /// assign values of "srs" to "dest"
-void Arg::item::set_hdr(arg_hdr& dest, const arg_hdr& src)
+void Arg::header::set(arg_hdr& dest, const arg_hdr& src)
 {
     ESP_LOGI(__FUNCTION__, "Set Arg Header from !!!long lifetime value");
     dest.flag  = src.flag /*char flag*/;	/* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
@@ -93,10 +93,10 @@ void Arg::item::set_hdr(arg_hdr& dest, const arg_hdr& src)
 
 
 /// move values of temporary "tsrs" to "dest"
-void Arg::item::set_hdr(arg_hdr& dest, arg_hdr&& tsrc)
+void Arg::header::set(arg_hdr& dest, arg_hdr&& tsrc)
 {
     ESP_LOGI(__FUNCTION__, "Set Arg Header from $$$temporary lifetime value");
-    set_hdr(dest, tsrc);
+    set(dest, tsrc);
 
     // clear pointer in the the temporary value
     dest.flag = '\0' /*char flag*/;/* ? */	/* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
@@ -125,13 +125,13 @@ const arg_hdr& Arg::item::header() const
 /// Set stored hdr field
 void Arg::item::header(const arg_hdr& src)
 {
-    Arg::item::set_hdr(header(), src);
+    Arg::header::set(header(), src);
 }; /* Arg::item::header(const arg_hdr&) */
 
 
 void Arg::item::header(arg_hdr&& tmpsrc)
 {
-    Arg::item::set_hdr(header(), std::move(tmpsrc));
+    Arg::header::set(header(), std::move(tmpsrc));
 }; /* Arg::item::header(arg_hdr&&) */
 
 
@@ -300,9 +300,9 @@ Arg::end& Arg::end::assign(const arg_end& other)
 {
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::item::set_hdr(this->hdr, other.hdr);
-	count = other.count;
-	error = other.error;
+	Arg::header::set(this->hdr, other.hdr);
+	count  = other.count;
+	error  = other.error;
 	parent = other.parent;
 	argval = other.argval;
     };
@@ -406,12 +406,95 @@ Arg::table::~table()
 
 /// Add new item in argtable
 template <>
-esp_err_t Arg::table::add<Arg::cmd&&>(cmd&& cmd_item)
+Arg::iterator Arg::table::add<Arg::cmd&&>(cmd&& cmd_item)
 {
-    stor.insert(std::prev(stor.end()), std::move(cmd_item));	// insert the new item before the "end" position of data vector
-    return ESP_OK;
+    return stor.insert(std::prev(stor.end()), std::move(cmd_item));	// insert the new item before the "end" position of data vector
 }; /* Arg::table::addo() */
 
+#if 0
+typedef struct arg_rem {
+    ...
+} arg_rem_t;
+#endif
+
+template <>
+Arg::iterator Arg::table::add<arg_rem_t*>(arg_rem_t* && item)
+{
+    return add(rem(item));
+}; /* Arg::table::add<arg_rem* &&>(arg_rem* &&) */
+
+
+#if 0
+typedef struct arg_lit {
+    ...
+} arg_lit_t;
+#endif
+
+template <>
+Arg::iterator Arg::table::add<arg_lit_t*>(arg_lit_t* && item)
+{
+    return add(lit(item));
+}; /* Arg::table::add<arg_lit* &&>(arg_lit* &&) */
+
+
+#if 0
+
+typedef struct arg_int {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    int* ival;          /* Array of parsed argument values */
+} arg_int_t;
+
+typedef struct arg_dbl {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    double* dval;       /* Array of parsed argument values */
+} arg_dbl_t;
+
+typedef struct arg_str {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    const char** sval;  /* Array of parsed argument values */
+} arg_str_t;
+
+typedef struct arg_rex {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    int count;          /* Number of matching command line args */
+    const char** sval;  /* Array of parsed argument values */
+} arg_rex_t;
+
+typedef struct arg_file {
+    struct arg_hdr hdr;     /* The mandatory argtable header struct */
+    int count;              /* Number of matching command line args*/
+    const char** filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
+    const char** basename;  /* Array of parsed basenames  (eg: foo.bar) */
+    const char** extension; /* Array of parsed extensions (eg: .bar) */
+} arg_file_t;
+
+typedef struct arg_date {
+    struct arg_hdr hdr; /* The mandatory argtable header struct */
+    const char* format; /* strptime format string used to parse the date */
+    int count;          /* Number of matching command line args */
+    struct tm* tmval;   /* Array of parsed time values */
+} arg_date_t;
+
+enum { ARG_ELIMIT = 1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG };
+typedef struct arg_end {
+    struct arg_hdr hdr;  /* The mandatory argtable header struct */
+    int count;           /* Number of errors encountered */
+    int* error;          /* Array of error codes */
+    void** parent;       /* Array of pointers to offending arg_xxx struct */
+    const char** argval; /* Array of pointers to offending argv[] string */
+} arg_end_t;
+
+typedef struct arg_cmd_info {
+    char name[ARG_CMD_NAME_LEN];
+    char description[ARG_CMD_DESCRIPTION_LEN];
+    arg_cmdfn* proc;
+} arg_cmd_info_t;
+
+
+#endif
 
 
 
