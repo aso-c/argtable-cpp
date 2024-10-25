@@ -5,8 +5,8 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 22.10.2024
- *	@version 0.3
+ *	      Updated 24.10.2024
+ *	@version 0.4
  */
 
 
@@ -73,7 +73,7 @@ typedef struct arg_hdr {
 // virtual void Arg::header(const arg_hdr&) = 0;
 
 /// assign values of "srs" to "dest"
-void Arg::header::set(arg_hdr& dest, const arg_hdr& src)
+void Arg::header::set(struct arg_hdr& dest, const arg_hdr& src)
 {
     ESP_LOGI(__FUNCTION__, "Set Arg Header from !!!long lifetime value");
     dest.flag  = src.flag /*char flag*/;	/* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
@@ -144,11 +144,32 @@ typedef struct arg_rem {
 } arg_rem_t;
 #endif
 
+/// copy constructor
+//Arg:rem::rem(const struct arg_rem* arg)
+template <>
+Arg::rem::seed(const struct arg_rem* arg)
+{
+    assign(*arg);
+}; /* Arg::rem::rem(const arg_rem*) */
+
+/// assignment the value from other item
+template <>
+Arg::rem& Arg::rem::assign(const struct arg_rem& other)
+{
+    if (this != &other)	///< prevent autoassigment
+	Arg::header::set(hdr, other.hdr);
+    return *this;
+}; /* Arg::rem::assign(const arg_rem&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::rem::header()
 {
     return hdr;
 }; /* Arg::rem::header() */
+#endif
 
 
 
@@ -161,11 +182,35 @@ typedef struct arg_lit {
 } arg_lit_t;
 #endif
 
+/// copy constructor
+//Arg:lit::lit(const struct arg_lit* arg)
+template <>
+Arg::lit::seed(const struct arg_lit* arg)
+{
+    assign(*arg);
+}; /* Arg::lit::lit(const arg_lit*) */
+
+/// assignment the value from other item
+template <>
+Arg::lit& Arg::lit::assign(const struct arg_lit& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count = other.count;
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::lit::assign(const arg_lit&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::lit::header()
 {
     return hdr;
 }; /* Arg::lit::header() */
+#endif
 
 
 
@@ -178,11 +223,36 @@ typedef struct arg_int {
 } arg_int_t;
 #endif
 
+/// copy constructor
+//Arg:integer::integer(const struct arg_lit* arg)
+template <>
+Arg::integer::seed(const struct arg_int* arg)
+{
+    assign(*arg);
+}; /* Arg::integer::integer(const arg_int*) */
+
+/// assignment the value from other item
+template <>
+Arg::integer& Arg::integer::assign(const struct arg_int& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count = other.count;
+	ival  = other.ival;       /* Array of parsed argument values */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::integer::assign(const arg_int&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::integer::header()
 {
     return hdr;
 }; /* Arg::integer::header() */
+#endif
 
 
 
@@ -196,11 +266,36 @@ typedef struct arg_dbl {
 } arg_dbl_t;
 #endif
 
+/// copy constructor
+//Arg:dbl::dbl(const struct arg_dbl* arg)
+template <>
+Arg::dbl::seed(const struct arg_dbl* arg)
+{
+    assign(*arg);
+}; /* Arg::dbl::dbl(const arg_dbl*) */
+
+/// assignment the value from other item
+template <>
+Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count = other.count;
+	dval  = other.dval;       /* Array of parsed argument values */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::dbl::assign(const arg_dbl&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::dbl::header()
 {
     return hdr;
 }; /* Arg::dbl::header() */
+#endif
 
 
 
@@ -214,11 +309,36 @@ typedef struct arg_str {
 } arg_str_t;
 #endif
 
+/// copy constructor
+//Arg:str::str(const struct arg_str* arg)
+template <>
+Arg::str::seed(const struct arg_str* arg)
+{
+    assign(*arg);
+}; /* Arg::str::str(const arg_str*) */
+
+/// assignment the value from other item
+template <>
+Arg::str& Arg::str::assign(const struct arg_str& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count = other.count;
+	sval  = other.sval;  /* Array of parsed argument values */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::str::assign(const arg_str&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::str::header()
 {
     return hdr;
 }; /* Arg::str::header() */
+#endif
 
 
 
@@ -231,11 +351,35 @@ typedef struct arg_rex {
 } arg_rex_t;
 #endif
 
+/// copy constructor
+//Arg:rex::rex(const struct arg_rex* arg)
+template <>
+Arg::rex::seed(const struct arg_rex* arg)
+{
+    assign(*arg);
+}; /* Arg::rex::rex(const arg_rex*) */
+
+/// assignment the value from other item
+template <>
+Arg::rex& Arg::rex::assign(const struct arg_rex& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count = other.count;
+	sval  = other.sval;  /* Array of parsed argument values */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::rex::assign(const arg_rex&) */
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::rex::header()
 {
     return hdr;
 }; /* Arg::rex::header() */
+#endif
 
 
 
@@ -250,11 +394,37 @@ typedef struct arg_file {
 } arg_file_t;
 #endif
 
+/// copy constructor
+//Arg:file::file(const struct arg_file* arg)
+template <>
+Arg::file::seed(const struct arg_file* arg)
+{
+    assign(*arg);
+}; /* Arg::file::file(const arg_file*) */
+
+/// assignment the value from other item
+template <>
+Arg::file& Arg::file::assign(const struct arg_file& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count    = other.count;
+	filename = other.filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
+	basename = other.filename;  /* Array of parsed basenames  (eg: foo.bar) */
+	extension = other.filename; /* Array of parsed extensions (eg: .bar) */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::file::assign(const arg_file&) */
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::file::header()
 {
     return hdr;
 }; /* Arg::file::header() */
+#endif
 
 
 
@@ -268,11 +438,38 @@ typedef struct arg_date {
 } arg_date_t;
 #endif
 
+/// copy constructor
+//Arg:date::date(const struct arg_date* arg)
+template <>
+Arg::date::seed(const struct arg_date* arg)
+{
+    assign(*arg);
+}; /* Arg::date::date(const arg_date*) */
+
+/// assignment the value from other item
+template <>
+Arg::date& Arg::date::assign(const struct arg_date& other)
+{
+    if (this != &other)	///< prevent autoassigment
+    {
+	Arg::header::set(hdr, other.hdr);
+	count  = other.count;
+	format = other.format; /* strptime format string used to parse the date */
+	count  = other.count;  /* Number of matching command line args */
+	tmval  = other.tmval;  /* Array of parsed time values */
+    }; /* if this != &other */
+    return *this;
+}; /* Arg::date::assign(const arg_date&) */
+
+
+
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::date::header()
 {
     return hdr;
 }; /* Arg::date::header() */
+#endif
 
 
 
@@ -290,38 +487,46 @@ typedef struct arg_end {
 
 
 /// copy constructor
-Arg::end::end(const arg_end* arg)
+template <>
+Arg::end::seed(const struct arg_end* arg)
+//Arg::end::end(const struct arg_end* arg)
 {
-    assign(arg);
-}; /* Arg::end::end(const arg_end&) */
+    assign(*arg);
+}; /* Arg::end::end(const arg_end*) */
+
 
 /// assignment the value from other item
-Arg::end& Arg::end::assign(const arg_end& other)
+template <>
+Arg::end& Arg::end::assign(const struct arg_end& other)
 {
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(this->hdr, other.hdr);
+	Arg::header::set(hdr, other.hdr);
 	count  = other.count;
 	error  = other.error;
 	parent = other.parent;
 	argval = other.argval;
-    };
+    }; /* if this != &other */
     return *this;
 }; /* Arg::end::assign(const arg_end&) */
 
+
+#if 0
 /// clone the Arg::end instance into allocated memory object
 Arg::end* Arg::end::clone() const
 {
     end* p = new end(*this);
     return p;
 }; /* Arg::end::clone() */
+#endif
 
-
+#if 0
 /// Get stored hdr field
 arg_hdr& Arg::end::header()
 {
     return hdr;
 }; /* Arg::end::header() */
+#endif
 
 
 

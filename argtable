@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 22.10.2024
- *	@version 0.3
+ *	      Updated 24.10.2024
+ *	@version 0.4
  */
 
 
@@ -101,227 +101,54 @@ typedef struct arg_hdr {
 
     // Any kind of specific argtable3 items
     template <class kind>
-    struct unit: public item, public kind
+    struct seed: public item, public kind
     {
 	/// copy constructor for long lifetime lvalue pointer
-	unit(const kind* arg);
+	seed(const kind* arg);
 	/// move constructor for temporary rvalue pointer to deallocable object
-	unit(kind* && arg): unit(arg) { delete arg; };
+	seed(kind* && arg): seed(arg) { /*delete*/ free(arg); };
 	/// copy constructor
-	unit(const unit& arg): unit(static_cast<const kind*>(&arg)) {};
+	seed(const seed& arg): seed(static_cast<const kind*>(&arg)) {};
 	/// Get stored hdr field
 	arg_hdr& header() override { return kind::hdr; };
 	/// clone the Arg::end instance into allocated memory object
-	unit* clone() const override;
+	seed* clone() const override { return new seed(this); };
 	/// assignment the value from other item
-	unit& assign(const kind&);
-	unit& assign(const unit& arg) {return assign(static_cast<kind>(arg));};
-	unit& operator = (const kind& otharg) { return assign(otharg); };
-	unit& operator = (const unit& other)  { return assign(other); };
+	seed& assign(const kind&);
+	seed& assign(kind* && parg) { assign(*parg); free(parg); return *this;};
+//	seed& assign(const seed& arg) {return assign(static_cast<kind>(arg));};
+	seed& operator = (kind* &&parg) { return assign(std::move(parg)); };
+	seed& operator = (const kind& otharg) { return assign(otharg); };
+//	seed& operator = (const seed& other)  { return assign(other); };
 
-    }; /* template class Arg::unit  */
+    }; /* template class Arg::seed  */
 
 
-
-
-#if 0
-typedef struct arg_rem {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-} arg_rem_t;
-#endif
-
-    struct rem: public item, public arg_rem
-    {
-	/// copy constructor
-	rem(const arg_rem&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	rem(arg_rem* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::rem */
+    using rem = seed<struct arg_rem>;
+    using lit = seed<struct arg_lit>;
+    using integer = seed<struct arg_int>;
+    using dbl = seed<struct arg_dbl>;
+    using str = seed<struct arg_str>;
+    using rex = seed<struct arg_rex>;
+    using file = seed<struct arg_file>;
+    using date = seed<struct arg_date>;
+    using end  = seed<struct arg_end>;
 
 
 
-#if 0
-typedef struct arg_lit {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-} arg_lit_t;
-#endif
-
-    struct lit: public item, public arg_lit
-    {
-	/// copy constructor
-	lit(const arg_lit&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	lit(arg_lit* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::lit */
+    /// assignment the value from other item
+    template <> Arg::rem& Arg::rem::assign(const struct arg_rem& other);
+    template <> Arg::lit& Arg::lit::assign(const struct arg_lit& other);
+    template <> Arg::integer& Arg::integer::assign(const struct arg_int& other);
+    template <> Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other);
+    template <> Arg::str& Arg::str::assign(const struct arg_str& other);
+    template <> Arg::rex& Arg::rex::assign(const struct arg_rex& other);
+    template <> Arg::file& Arg::file::assign(const struct arg_file& other);
+    template <> Arg::date& Arg::date::assign(const struct arg_date& other);
+    template <> Arg::end& Arg::end::assign(const struct arg_end& other);
 
 
 
-#if 0
-typedef struct arg_int {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    int* ival;          /* Array of parsed argument values */
-} arg_int_t;
-#endif
-
-    struct integer: public item, public arg_int
-    {
-	/// copy constructor
-	integer(const arg_int&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	integer(arg_int* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::integer */
-
-
-
-#if 0
-typedef struct arg_dbl {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    double* dval;       /* Array of parsed argument values */
-} arg_dbl_t;
-#endif
-
-    struct dbl: public item, public arg_dbl
-    {
-	/// copy constructor
-	dbl(const arg_dbl&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	dbl(arg_dbl* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::dbl */
-
-
-
-#if 0
-typedef struct arg_str {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    const char** sval;  /* Array of parsed argument values */
-} arg_str_t;
-#endif
-
-    struct str: public item, public arg_str
-    {
-	/// copy constructor
-	str(const arg_str&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	str(arg_str* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::str */
-
-
-
-#if 0
-typedef struct arg_rex {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    const char** sval;  /* Array of parsed argument values */
-} arg_rex_t;
-#endif
-
-    struct rex: public item, public arg_rex
-    {
-	/// copy constructor
-	rex(const arg_rex&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	rex(arg_rex* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::rex */
-
-
-
-#if 0
-typedef struct arg_file {
-    struct arg_hdr hdr;     /* The mandatory argtable header struct */
-    int count;              /* Number of matching command line args*/
-    const char** filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
-    const char** basename;  /* Array of parsed basenames  (eg: foo.bar) */
-    const char** extension; /* Array of parsed extensions (eg: .bar) */
-} arg_file_t;
-#endif
-
-    struct file: public item, public arg_file
-    {
-	/// copy constructor
-	file(const arg_file&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	file(arg_file* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::file */
-
-
-
-#if 0
-typedef struct arg_date {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    const char* format; /* strptime format string used to parse the date */
-    int count;          /* Number of matching command line args */
-    struct tm* tmval;   /* Array of parsed time values */
-} arg_date_t;
-#endif
-
-    struct date: public item, public arg_date
-    {
-	/// copy constructor
-	date(const arg_date&);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	date(arg_date* &&);
-	/// Get stored hdr field
-	arg_hdr& header() override;
-
-    }; /* struct Arg::date */
-
-
-
-#if 0
-enum { ARG_ELIMIT = 1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG };
-typedef struct arg_end {
-    struct arg_hdr hdr;  /* The mandatory argtable header struct */
-    int count;           /* Number of errors encountered */
-    int* error;          /* Array of error codes */
-    void** parent;       /* Array of pointers to offending arg_xxx struct */
-    const char** argval; /* Array of pointers to offending argv[] string */
-} arg_end_t;
-#endif
-
-    struct end: public item, public arg_end
-    {
-	/// copy constructor for long lifetime lvalue pointer
-	end(const arg_end* arg);
-	/// move constructor for temporary rvalue pointer to deallocable object
-	end(arg_end* && arg): end(arg) {delete arg;};
-	/// copy constructor
-	end(const end& arg): end(static_cast<const arg_end*>(&arg)) {};
-	/// Get stored hdr field
-	arg_hdr& header() override;
-	/// clone the Arg::end instance into allocated memory object
-	end* clone() const override;
-	/// assignment the value from other item
-	end& assign(const arg_end&);
-	end& assign(const end& arg) {return assign(static_cast<arg_end>(arg));};
-	end& operator = (const arg_end& otharg) { return assign(otharg); };
-	end& operator = (const end& other) { return assign(other); };
-
-    }; /* struct Arg::end */
 
 
 
@@ -329,6 +156,10 @@ typedef struct arg_end {
     {
 //	cmd(item* const);	///< Initializing the Arg::cmd with l-value, long lifetime pointer
 	cmd(item* &&);		///< Initializing the Arg::cmd with temporary lifetime pointer
+
+	template <class It>
+	cmd(It* && pitem);	///< Initializing the Arg::cmd with temporary lifetime pointer to allocated argtable3 struct
+
 	cmd(const cmd&);	///< Initializing the Arg::cmd with l-value, long lifetime ref
 	cmd(cmd&& );		///< Initializing the Arg::cmd with temporary lifetime - rvalue ref
 	~cmd() {delete arg;};
@@ -354,6 +185,8 @@ typedef struct arg_end {
     }; /* struct Arg::cmd */
 
 
+
+
 //    template<typename arg_end*>
 //    std::list(int, arg_end*) -> std::list<cmd>(int, Arg::end)
 
@@ -372,7 +205,6 @@ typedef struct arg_end {
 	template <typename C>
 	iterator add(C&& c);
 
-
 //	void** data() /*{ return stor.data(); }*/;
 	std::vector<void*> data() /*{ return stor.data(); }*/;
 
@@ -382,6 +214,55 @@ typedef struct arg_end {
 	std::list<cmd> stor;
 
     }; /* table */
+
+#if 0
+	    /// assignment the value from other item
+	    template <> Arg::rem& Arg::rem::assign(const struct arg_rem& other);
+	    template <> Arg::lit& Arg::lit::assign(const struct arg_lit& other);
+	    template <> Arg::integer& Arg::integer::assign(const struct arg_int& other);
+	    template <> Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other);
+	    template <> Arg::str& Arg::str::assign(const struct arg_str& other);
+	    template <> Arg::rex& Arg::rex::assign(const struct arg_rex& other);
+	    template <> Arg::file& Arg::file::assign(const struct arg_file& other);
+	    template <> Arg::date& Arg::date::assign(const struct arg_date& other);
+	    template <> Arg::end& Arg::end::assign(const struct arg_end& other);
+#endif
+
+    template <>
+    iterator table::add<cmd&&>(cmd&&);
+
+//    template <typename C>
+//    iterator table::add(C&& c arg) {
+//	return add<cmd&&>(cmd(new rem(std::move(arg))));
+//    };
+
+    template <>
+    inline iterator table::add<struct arg_rem*&&>(struct arg_rem*&& arg) {
+	return add<cmd&&>(cmd(/*static_cast<item* &&>(*/new rem(std::move(arg))/*)*/));
+    };
+
+    template <>
+    inline iterator table::add<arg_lit*&&>(arg_lit*&& arg) {
+	return add<cmd&&>(cmd(new lit(std::move(arg))));
+    };
+
+
+
+    template <>
+    iterator table::add<struct arg_int*&&>(struct arg_int*&&);
+    template <>
+    iterator table::add<arg_dbl*&&>(arg_dbl*&&);
+    template <>
+    iterator table::add<struct arg_str*&&>(struct arg_str*&&);
+    template <>
+    iterator table::add<arg_rex*&&>(arg_rex*&&);
+    template <>
+    iterator table::add<arg_file*&&>(arg_file*&&);
+    template <>
+    iterator table::add<arg_date*&&>(arg_date*&&);
+    template <>
+    iterator table::add<struct arg_end*&&>(struct arg_end*&&);
+
 
 }; /* namespace Arg*/
 
