@@ -5,7 +5,7 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 24.10.2024
+ *	      Updated 25.10.2024
  *	@version 0.4
  */
 
@@ -144,6 +144,7 @@ typedef struct arg_rem {
 } arg_rem_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:rem::rem(const struct arg_rem* arg)
 template <>
@@ -151,6 +152,7 @@ Arg::rem::seed(const struct arg_rem* arg)
 {
     assign(*arg);
 }; /* Arg::rem::rem(const arg_rem*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -163,15 +165,6 @@ Arg::rem& Arg::rem::assign(const struct arg_rem& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::rem::header()
-{
-    return hdr;
-}; /* Arg::rem::header() */
-#endif
-
-
 
 
 #if 0
@@ -182,6 +175,7 @@ typedef struct arg_lit {
 } arg_lit_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:lit::lit(const struct arg_lit* arg)
 template <>
@@ -189,6 +183,7 @@ Arg::lit::seed(const struct arg_lit* arg)
 {
     assign(*arg);
 }; /* Arg::lit::lit(const arg_lit*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -204,16 +199,6 @@ Arg::lit& Arg::lit::assign(const struct arg_lit& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::lit::header()
-{
-    return hdr;
-}; /* Arg::lit::header() */
-#endif
-
-
-
 
 #if 0
 typedef struct arg_int {
@@ -223,6 +208,7 @@ typedef struct arg_int {
 } arg_int_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:integer::integer(const struct arg_lit* arg)
 template <>
@@ -230,7 +216,7 @@ Arg::integer::seed(const struct arg_int* arg)
 {
     assign(*arg);
 }; /* Arg::integer::integer(const arg_int*) */
-
+#endif
 /// assignment the value from other item
 template <>
 Arg::integer& Arg::integer::assign(const struct arg_int& other)
@@ -246,17 +232,6 @@ Arg::integer& Arg::integer::assign(const struct arg_int& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::integer::header()
-{
-    return hdr;
-}; /* Arg::integer::header() */
-#endif
-
-
-
-
 
 #if 0
 typedef struct arg_dbl {
@@ -266,6 +241,7 @@ typedef struct arg_dbl {
 } arg_dbl_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:dbl::dbl(const struct arg_dbl* arg)
 template <>
@@ -273,6 +249,7 @@ Arg::dbl::seed(const struct arg_dbl* arg)
 {
     assign(*arg);
 }; /* Arg::dbl::dbl(const arg_dbl*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -289,17 +266,6 @@ Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::dbl::header()
-{
-    return hdr;
-}; /* Arg::dbl::header() */
-#endif
-
-
-
-
 
 #if 0
 typedef struct arg_str {
@@ -309,6 +275,7 @@ typedef struct arg_str {
 } arg_str_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:str::str(const struct arg_str* arg)
 template <>
@@ -316,6 +283,7 @@ Arg::str::seed(const struct arg_str* arg)
 {
     assign(*arg);
 }; /* Arg::str::str(const arg_str*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -332,15 +300,6 @@ Arg::str& Arg::str::assign(const struct arg_str& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::str::header()
-{
-    return hdr;
-}; /* Arg::str::header() */
-#endif
-
-
 
 
 #if 0
@@ -351,6 +310,7 @@ typedef struct arg_rex {
 } arg_rex_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:rex::rex(const struct arg_rex* arg)
 template <>
@@ -358,6 +318,7 @@ Arg::rex::seed(const struct arg_rex* arg)
 {
     assign(*arg);
 }; /* Arg::rex::rex(const arg_rex*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -373,14 +334,6 @@ Arg::rex& Arg::rex::assign(const struct arg_rex& other)
 }; /* Arg::rex::assign(const arg_rex&) */
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::rex::header()
-{
-    return hdr;
-}; /* Arg::rex::header() */
-#endif
-
 
 
 
@@ -394,6 +347,7 @@ typedef struct arg_file {
 } arg_file_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:file::file(const struct arg_file* arg)
 template <>
@@ -401,6 +355,7 @@ Arg::file::seed(const struct arg_file* arg)
 {
     assign(*arg);
 }; /* Arg::file::file(const arg_file*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -418,15 +373,6 @@ Arg::file& Arg::file::assign(const struct arg_file& other)
 }; /* Arg::file::assign(const arg_file&) */
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::file::header()
-{
-    return hdr;
-}; /* Arg::file::header() */
-#endif
-
-
 
 
 #if 0
@@ -438,6 +384,7 @@ typedef struct arg_date {
 } arg_date_t;
 #endif
 
+#if 0
 /// copy constructor
 //Arg:date::date(const struct arg_date* arg)
 template <>
@@ -445,6 +392,7 @@ Arg::date::seed(const struct arg_date* arg)
 {
     assign(*arg);
 }; /* Arg::date::date(const arg_date*) */
+#endif
 
 /// assignment the value from other item
 template <>
@@ -463,16 +411,6 @@ Arg::date& Arg::date::assign(const struct arg_date& other)
 
 
 
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::date::header()
-{
-    return hdr;
-}; /* Arg::date::header() */
-#endif
-
-
-
 
 #if 0
 enum { ARG_ELIMIT = 1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG };
@@ -485,7 +423,7 @@ typedef struct arg_end {
 } arg_end_t;
 #endif
 
-
+//#if 0
 /// copy constructor
 template <>
 Arg::end::seed(const struct arg_end* arg)
@@ -493,7 +431,7 @@ Arg::end::seed(const struct arg_end* arg)
 {
     assign(*arg);
 }; /* Arg::end::end(const arg_end*) */
-
+//#endif
 
 /// assignment the value from other item
 template <>
@@ -509,25 +447,6 @@ Arg::end& Arg::end::assign(const struct arg_end& other)
     }; /* if this != &other */
     return *this;
 }; /* Arg::end::assign(const arg_end&) */
-
-
-#if 0
-/// clone the Arg::end instance into allocated memory object
-Arg::end* Arg::end::clone() const
-{
-    end* p = new end(*this);
-    return p;
-}; /* Arg::end::clone() */
-#endif
-
-#if 0
-/// Get stored hdr field
-arg_hdr& Arg::end::header()
-{
-    return hdr;
-}; /* Arg::end::header() */
-#endif
-
 
 
 
@@ -597,7 +516,7 @@ void Arg::cmd::swap(cmd& other) noexcept
 
 /// default constructor
 Arg::table::table(int mx_err_cnt):
-    stor(1, new end(arg_end(mx_err_cnt)))	// add terminal for commands sequention
+    stor(1, static_cast<Arg::item*&&>(new end(arg_end(mx_err_cnt))))	// add terminal for commands sequention
 { };
 
 
@@ -610,96 +529,43 @@ Arg::table::~table()
 
 
 /// Add new item in argtable
-template <>
-Arg::iterator Arg::table::add<Arg::cmd&&>(cmd&& cmd_item)
+//template <>
+//Arg::iterator Arg::table::add<Arg::cmd&&>(cmd&& cmd_item)
+Arg::iterator Arg::table::addcmd(cmd&& cmd_item)
 {
+    dirty = true;
     return stor.insert(std::prev(stor.end()), std::move(cmd_item));	// insert the new item before the "end" position of data vector
 }; /* Arg::table::addo() */
 
-#if 0
-typedef struct arg_rem {
-    ...
-} arg_rem_t;
-#endif
+template <typename It>
+/*inline*/ Arg::iterator Arg::table::add(It* &&it) {
+	return addcmd(cmd(static_cast<item* &&>(new seed/*<It>*/(std::move(it)))));
+}; /* table::add<It, C>(It* &&it) */
 
-template <>
-Arg::iterator Arg::table::add<arg_rem_t*>(arg_rem_t* && item)
+
+
+template //</*arg_rex, Arg::rex*/>
+Arg::iterator Arg::table::add<arg_rex>(arg_rex* &&it);
+
+
+
+/// Get the syntax table as array to void* data
+std::vector<void*>& Arg::table::syntax()
 {
-    return add(rem(item));
-}; /* Arg::table::add<arg_rem* &&>(arg_rem* &&) */
-
-
-#if 0
-typedef struct arg_lit {
-    ...
-} arg_lit_t;
-#endif
-
-template <>
-Arg::iterator Arg::table::add<arg_lit_t*>(arg_lit_t* && item)
-{
-    return add(lit(item));
-}; /* Arg::table::add<arg_lit* &&>(arg_lit* &&) */
-
-
-#if 0
-
-typedef struct arg_int {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    int* ival;          /* Array of parsed argument values */
-} arg_int_t;
-
-typedef struct arg_dbl {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    double* dval;       /* Array of parsed argument values */
-} arg_dbl_t;
-
-typedef struct arg_str {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    const char** sval;  /* Array of parsed argument values */
-} arg_str_t;
-
-typedef struct arg_rex {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    int count;          /* Number of matching command line args */
-    const char** sval;  /* Array of parsed argument values */
-} arg_rex_t;
-
-typedef struct arg_file {
-    struct arg_hdr hdr;     /* The mandatory argtable header struct */
-    int count;              /* Number of matching command line args*/
-    const char** filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
-    const char** basename;  /* Array of parsed basenames  (eg: foo.bar) */
-    const char** extension; /* Array of parsed extensions (eg: .bar) */
-} arg_file_t;
-
-typedef struct arg_date {
-    struct arg_hdr hdr; /* The mandatory argtable header struct */
-    const char* format; /* strptime format string used to parse the date */
-    int count;          /* Number of matching command line args */
-    struct tm* tmval;   /* Array of parsed time values */
-} arg_date_t;
-
-enum { ARG_ELIMIT = 1, ARG_EMALLOC, ARG_ENOMATCH, ARG_ELONGOPT, ARG_EMISSARG };
-typedef struct arg_end {
-    struct arg_hdr hdr;  /* The mandatory argtable header struct */
-    int count;           /* Number of errors encountered */
-    int* error;          /* Array of error codes */
-    void** parent;       /* Array of pointers to offending arg_xxx struct */
-    const char** argval; /* Array of pointers to offending argv[] string */
-} arg_end_t;
-
-typedef struct arg_cmd_info {
-    char name[ARG_CMD_NAME_LEN];
-    char description[ARG_CMD_DESCRIPTION_LEN];
-    arg_cmdfn* proc;
-} arg_cmd_info_t;
-
-
-#endif
+    /// if data is dirty - refresh the data
+    if (dirty)
+    {
+	//data = vector<void*>(stor.begin()->get(), stor.end()->get());
+	data.clear();
+	data.reserve(stor.size());
+	int i = 0;
+	for (/*int i = 0;*/ auto& c : stor)
+	{
+	    data[i++] = c.get();
+	}
+    }; /* if dirty */
+    return data;
+}; /* std::vector<void*>& Arg::table::syntax() */
 
 
 

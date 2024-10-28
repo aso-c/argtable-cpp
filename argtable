@@ -5,7 +5,7 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 24.10.2024
+ *	      Updated 25.10.2024
  *	@version 0.4
  */
 
@@ -104,9 +104,9 @@ typedef struct arg_hdr {
     struct seed: public item, public kind
     {
 	/// copy constructor for long lifetime lvalue pointer
-	seed(const kind* arg);
+	seed(const kind* arg) { assign(*arg); };
 	/// move constructor for temporary rvalue pointer to deallocable object
-	seed(kind* && arg): seed(arg) { /*delete*/ free(arg); };
+	seed(kind* && arg): seed(arg) { free(arg); };
 	/// copy constructor
 	seed(const seed& arg): seed(static_cast<const kind*>(&arg)) {};
 	/// Get stored hdr field
@@ -164,6 +164,8 @@ typedef struct arg_hdr {
 	cmd(cmd&& );		///< Initializing the Arg::cmd with temporary lifetime - rvalue ref
 	~cmd() {delete arg;};
 
+	item* get() { return arg;};
+
 	cmd& assign(cmd&& other) { swap(other); return *this; };
 	cmd& assign(const cmd& other);
 	cmd& assign(item* &&otharg) { arg = otharg; return *this; };
@@ -200,71 +202,29 @@ typedef struct arg_hdr {
 	~table(); ///< destructor
 
 	/// Add new item in argtable
-//	esp_err_t addoption(void*);
-//	esp_err_t add(cmd&&);
-	template <typename C>
-	iterator add(C&& c);
+	iterator addcmd(cmd&&);
 
-//	void** data() /*{ return stor.data(); }*/;
-	std::vector<void*> data() /*{ return stor.data(); }*/;
+	template <typename It>
+	iterator add(It* &&it);
+
+	/// Get the syntax table as array to void* data
+	std::vector<void*>& syntax();
+
+    private:
+
+	bool dirty = true;	// Content of table is updated, data is dirty
+	std::vector<void*> data;// array of pinters to content of the syntaxes table
 
     protected:
 
-//	std::vector<void*> stor;
 	std::list<cmd> stor;
+
 
     }; /* table */
 
-#if 0
-	    /// assignment the value from other item
-	    template <> Arg::rem& Arg::rem::assign(const struct arg_rem& other);
-	    template <> Arg::lit& Arg::lit::assign(const struct arg_lit& other);
-	    template <> Arg::integer& Arg::integer::assign(const struct arg_int& other);
-	    template <> Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other);
-	    template <> Arg::str& Arg::str::assign(const struct arg_str& other);
-	    template <> Arg::rex& Arg::rex::assign(const struct arg_rex& other);
-	    template <> Arg::file& Arg::file::assign(const struct arg_file& other);
-	    template <> Arg::date& Arg::date::assign(const struct arg_date& other);
-	    template <> Arg::end& Arg::end::assign(const struct arg_end& other);
-#endif
-
-    template <>
-    iterator table::add<cmd&&>(cmd&&);
-
-//    template <typename C>
-//    iterator table::add(C&& c arg) {
-//	return add<cmd&&>(cmd(new rem(std::move(arg))));
-//    };
-
-    template <>
-    inline iterator table::add<struct arg_rem*&&>(struct arg_rem*&& arg) {
-	return add<cmd&&>(cmd(/*static_cast<item* &&>(*/new rem(std::move(arg))/*)*/));
-    };
-
-    template <>
-    inline iterator table::add<arg_lit*&&>(arg_lit*&& arg) {
-	return add<cmd&&>(cmd(new lit(std::move(arg))));
-    };
 
 
-
-    template <>
-    iterator table::add<struct arg_int*&&>(struct arg_int*&&);
-    template <>
-    iterator table::add<arg_dbl*&&>(arg_dbl*&&);
-    template <>
-    iterator table::add<struct arg_str*&&>(struct arg_str*&&);
-    template <>
-    iterator table::add<arg_rex*&&>(arg_rex*&&);
-    template <>
-    iterator table::add<arg_file*&&>(arg_file*&&);
-    template <>
-    iterator table::add<arg_date*&&>(arg_date*&&);
-    template <>
-    iterator table::add<struct arg_end*&&>(struct arg_end*&&);
-
-
-}; /* namespace Arg*/
+}; /* namespace Arg */
 
 
 #endif // __ARGTABLE3_CPP__
