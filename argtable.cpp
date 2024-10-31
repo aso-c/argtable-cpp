@@ -17,6 +17,7 @@
 #include <utility>
 #include <vector>
 #include <list>
+#include <variant>
 
 
 #include <esp_system.h>
@@ -158,6 +159,7 @@ Arg::rem::seed(const struct arg_rem* arg)
 template <>
 Arg::rem& Arg::rem::assign(const struct arg_rem& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_rem&] value other: [%p] to Arg::rem [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
 	Arg::header::set(hdr, other.hdr);
     return *this;
@@ -189,6 +191,7 @@ Arg::lit::seed(const struct arg_lit* arg)
 template <>
 Arg::lit& Arg::lit::assign(const struct arg_lit& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_lit&] value other: [%p] to Arg::lit [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -221,6 +224,7 @@ Arg::integer::seed(const struct arg_int* arg)
 template <>
 Arg::integer& Arg::integer::assign(const struct arg_int& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_int&] value other: [%p] to Arg::integer [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -255,6 +259,7 @@ Arg::dbl::seed(const struct arg_dbl* arg)
 template <>
 Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_dbl&] value other: [%p] to Arg::dbl [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -289,6 +294,7 @@ Arg::str::seed(const struct arg_str* arg)
 template <>
 Arg::str& Arg::str::assign(const struct arg_str& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_str&] value other: [%p] to Arg::str [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -324,6 +330,7 @@ Arg::rex::seed(const struct arg_rex* arg)
 template <>
 Arg::rex& Arg::rex::assign(const struct arg_rex& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_rex&] value other: [%p] to Arg::rex [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -361,6 +368,7 @@ Arg::file::seed(const struct arg_file* arg)
 template <>
 Arg::file& Arg::file::assign(const struct arg_file& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_file&] value other: [%p] to Arg::file [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -398,6 +406,7 @@ Arg::date::seed(const struct arg_date* arg)
 template <>
 Arg::date& Arg::date::assign(const struct arg_date& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_date&] value other: [%p] to Arg::date [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -423,7 +432,7 @@ typedef struct arg_end {
 } arg_end_t;
 #endif
 
-//#if 0
+#if 0
 /// copy constructor
 template <>
 Arg::end::seed(const struct arg_end* arg)
@@ -431,12 +440,13 @@ Arg::end::seed(const struct arg_end* arg)
 {
     assign(*arg);
 }; /* Arg::end::end(const arg_end*) */
-//#endif
+#endif
 
 /// assignment the value from other item
 template <>
 Arg::end& Arg::end::assign(const struct arg_end& other)
 {
+    ESP_LOGI(__FUNCTION__, "Assign the [const arg_end&] value other: [%p] to Arg::end [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
 	Arg::header::set(hdr, other.hdr);
@@ -515,9 +525,10 @@ void Arg::cmd::swap(cmd& other) noexcept
 
 
 /// default constructor
-Arg::table::table(int mx_err_cnt):
-    stor(1, static_cast<Arg::item*&&>(new end(arg_end(mx_err_cnt))))	// add terminal for commands sequention
-{ };
+Arg::table::table(int mx_err_cnt)//:
+//    stor(1, static_cast<Arg::item*&&>(new end(arg_end(mx_err_cnt))))	// add terminal for commands sequention
+    //stor{/*(1,*/ xcmd(arg_end(mx_err_cnt))/*)*/}	// add terminal for commands sequention
+{ stor.insert(stor.end(), xcmd(arg_end(mx_err_cnt))); };
 
 
 /// destructor
@@ -531,21 +542,95 @@ Arg::table::~table()
 /// Add new item in argtable
 //template <>
 //Arg::iterator Arg::table::add<Arg::cmd&&>(cmd&& cmd_item)
-Arg::iterator Arg::table::addcmd(cmd&& cmd_item)
+Arg::iterator Arg::table::addcmd(xcmd&& cmd_item)
 {
     dirty = true;
     return stor.insert(std::prev(stor.end()), std::move(cmd_item));	// insert the new item before the "end" position of data vector
 }; /* Arg::table::addo() */
 
+
+/// Return the converted this to the void*
+template <class kind>
+void * Arg::seed<kind>::pure() {
+    return reinterpret_cast<void*>(/*static_cast<kind*>(*/this/*)*/);
+};
+
+template void* Arg::seed<struct arg_rem>::pure();
+template void* Arg::seed<struct arg_lit>::pure();
+template void* Arg::seed<struct arg_int>::pure();
+template void* Arg::seed<struct arg_dbl>::pure();
+template void* Arg::seed<struct arg_rex>::pure();
+template void* Arg::seed<struct arg_file>::pure();
+template void* Arg::seed<struct arg_date>::pure();
+template void* Arg::seed<struct arg_end>::pure();
+
+
+
 template <typename It>
 /*inline*/ Arg::iterator Arg::table::add(It* &&it) {
-	return addcmd(cmd(static_cast<item* &&>(new seed/*<It>*/(std::move(it)))));
+    ESP_LOGI(__FUNCTION__, "Adding the command from the temporary [It* &&] [%p]", it);
+
+	//Arg::seed<It>* tmp = new Arg::seed<It>(std::move(it));
+
+//    ESP_LOGI(__FUNCTION__, "Temporary seed object tmp [%p]", tmp);
+
+//	auto res = addcmd(cmd(std::move(tmp)));
+//	auto res = addcmd(cmd(static_cast<item* &&>(std::move(tmp))));
+	auto res = addcmd(xcmd(it));
+
+    ESP_LOGI(__FUNCTION__, "Inserted as [%p]", &(*res));
+
+    return res;
+	// return addcmd(cmd(static_cast<item* &&>(new seed/*<It>*/(std::move(it)))));
 }; /* table::add<It, C>(It* &&it) */
 
 
+#if 0
+arg_end
+#endif
 
+template Arg::iterator Arg::table::add<struct arg_rem>(struct arg_rem* &&it);
+template Arg::iterator Arg::table::add<arg_lit>(struct arg_lit* &&it);
+template Arg::iterator Arg::table::add<arg_int>(struct arg_int* &&it);
+template Arg::iterator Arg::table::add<arg_dbl>(struct arg_dbl* &&it);
 template //</*arg_rex, Arg::rex*/>
-Arg::iterator Arg::table::add<arg_rex>(arg_rex* &&it);
+Arg::iterator Arg::table::add<arg_rex>(struct arg_rex* &&it);
+template Arg::iterator Arg::table::add<arg_file>(struct arg_file* &&it);
+template Arg::iterator Arg::table::add<arg_date>(struct arg_date* &&it);
+
+
+template <std::size_t n, typename ... Stored>
+inline void* xget(std::variant<Stored...> stored)
+{
+    if constexpr (std::variant_size_v<std::variant<Stored...>> != n)
+    {
+	if /*constexpr*/ (stored.index() == n)
+	    return static_cast<void*>(std::get<n>(stored));
+
+	return xget<n + 1, Stored...>(stored);
+    }; /* if constexpr std::variant_size_v<std::variant<Stored...>> != n */
+
+    return nullptr;
+
+}; /* xget() */
+
+
+
+void* Arg::xcmd::get()
+{
+//    return static_cast<void*>(std::get<0>(held));
+    return xget<0>(held);
+}; /* Arg::xcmd::get() */
+
+
+Arg::xcmd::~xcmd()
+{
+//    arg_freetable( std::get<held.index()>(held), 1);
+    void * ptr = get();
+    arg_freetable( &ptr, 1);
+}; /* Arg::xcmd::~xcmd() */
+
+
 
 
 
@@ -555,14 +640,25 @@ std::vector<void*>& Arg::table::syntax()
     /// if data is dirty - refresh the data
     if (dirty)
     {
+	ESP_LOGI(__FUNCTION__, "The new generation of the data");
 	//data = vector<void*>(stor.begin()->get(), stor.end()->get());
 	data.clear();
 	data.reserve(stor.size());
-	int i = 0;
-	for (/*int i = 0;*/ auto& c : stor)
+	ESP_LOGI(__FUNCTION__, "Length of the data before new data generation: %i", data.size());
+	ESP_LOGI(__FUNCTION__, "Reserved length of the data before new data generation: %i", data.capacity());
+
+//	int i = 0;
+	//for (/*int i = 0;*/ auto/*&*/ c : stor)
+	for (auto c = stor.begin(); c != stor.end(); c++)
 	{
-	    data[i++] = c.get();
-	}
+	    ESP_LOGI(__FUNCTION__, "Push back the item value during the data regeneration, item addr: [%p]", c->get());
+	    ESP_LOGI(__FUNCTION__, "################ arg_xxx item convertion addr[%p]", (void*)c->get()/*->pure()*/);
+	    data.push_back((void*)c->get());
+//	    data[i++] = c.get();
+	}; /* for auto& c : stor */
+	dirty = false;
+	ESP_LOGI(__FUNCTION__, "Length of the data after data regeneration: %i", data.size());
+
     }; /* if dirty */
     return data;
 }; /* std::vector<void*>& Arg::table::syntax() */

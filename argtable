@@ -84,8 +84,10 @@ typedef struct arg_hdr {
     {
 	/// Get stored hdr field
 	virtual arg_hdr& header() = 0;
-	const arg_hdr& header() const;
+	const   arg_hdr& header() const;
 	virtual item* clone() const = 0;	///< Clone object of the derived from the Arg::item type
+	virtual void *pure() = 0;		///< Return the converted this to the void*
+	virtual operator void*() = 0;		///< Converting item to a void*
 	/// Set stored hdr field
 	void header(const item& it) { header(it.header()); };
 	void header(const arg_hdr&);
@@ -104,21 +106,44 @@ typedef struct arg_hdr {
     struct seed: public item, public kind
     {
 	/// copy constructor for long lifetime lvalue pointer
-	seed(const kind* arg) { assign(*arg); };
+	seed(const kind* arg) {
+	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [const arg_xxx&] obj: [%p] into [%p]", arg, this);
+	    assign(*arg); };
 	/// move constructor for temporary rvalue pointer to deallocable object
-	seed(kind* && arg): seed(arg) { free(arg); };
+	seed(kind* && arg): seed(arg) {
+	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [arg_xxx* &&] obj: [%p] into [%p]", arg, this);
+	    ESP_LOGI(__FUNCTION__, "Free the the [arg_xxx* &&] pointed object");
+	    free(arg);// };
+	    // xfree(arg);
+	    arg = /*NULL*/nullptr; };
 	/// copy constructor
-	seed(const seed& arg): seed(static_cast<const kind*>(&arg)) {};
+	seed(const seed& arg): seed(static_cast<const kind*>(&arg)) {
+	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [const Arg::seed&] obj: [%p] into [%p]", &arg, this);
+	};
+	/// move constructor
+	seed(seed&& arg): seed(static_cast<kind* &&>(&arg)) {
+	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the temporarily [Arg::seed&&] obj: [%p] into [%p]", &arg, this);
+	};
 	/// Get stored hdr field
 	arg_hdr& header() override { return kind::hdr; };
 	/// clone the Arg::end instance into allocated memory object
 	seed* clone() const override { return new seed(this); };
+	/// Return the converted this to the void*
+	void *pure() override ;//{ return reinterpret_cast<void*>(/*static_cast<kind*>(*/this/*)*/); };
+	/// Converting item to a void*
+	operator void*() override { return static_cast<kind*>(this);};
 	/// assignment the value from other item
 	seed& assign(const kind&);
-	seed& assign(kind* && parg) { assign(*parg); free(parg); return *this;};
+	seed& assign(kind* && parg) {
+	    ESP_LOGI(__FUNCTION__, "Assign the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
+	    assign(const_cast<const kind&>(*parg)); free(parg); return *this;};
 //	seed& assign(const seed& arg) {return assign(static_cast<kind>(arg));};
-	seed& operator = (kind* &&parg) { return assign(std::move(parg)); };
-	seed& operator = (const kind& otharg) { return assign(otharg); };
+	seed& operator = (kind* &&parg) {
+	    ESP_LOGI(__FUNCTION__, "Operator = the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
+	    return assign(std::move(parg)); };
+	seed& operator = (const kind& otharg) {
+	    ESP_LOGI(__FUNCTION__, "Operator = the const value [const arg_xxx &] otharg [%p] to [%p]", &otharg, this);
+	    return assign(otharg); };
 //	seed& operator = (const seed& other)  { return assign(other); };
 
     }; /* template class Arg::seed  */
@@ -186,13 +211,49 @@ typedef struct arg_hdr {
 	item* arg = nullptr;
     }; /* struct Arg::cmd */
 
+    /// Smart pointer to argtable3 items
+    class xcmd
+    {
+    public:
+	template <typename iT>
+	xcmd(iT* &it): held(it) {};
 
+	template <typename iT>
+	xcmd(iT* &&it): xcmd(it) { it = nullptr; };
+
+	/// Only move-constructors with all possible variants!!!
+	xcmd(xcmd &other): xcmd(std::move(other)) /*held(std::move(other.held))*/ {};
+	xcmd(xcmd &&other): held(std::move(other.held)) { other.held = static_cast<struct arg_rem*>(nullptr); };
+
+	virtual ~xcmd() /*{arg_freetable( held.get(), 1);}*/;
+
+	void* get();
+
+	template <typename It>
+	xcmd& assign(It&& it);
+
+	template <typename It>
+	xcmd& operator =(It&& it) { return assign(it); }
+
+
+//    protected:
+
+	std::variant<struct arg_rem*,
+		    struct arg_lit*,
+		    struct arg_int*,
+		    struct arg_dbl*,
+		    struct arg_str*,
+		    struct arg_rex*,
+		    struct arg_file*,
+		    struct arg_date*,
+		    struct arg_end*> held;
+    }; /* class xcmd */
 
 
 //    template<typename arg_end*>
 //    std::list(int, arg_end*) -> std::list<cmd>(int, Arg::end)
 
-    using iterator = std::list<cmd>::iterator;
+    using iterator = std::list<xcmd>::iterator;
 
     // C++ wrapper for definition arctable functionality
     class table
@@ -202,7 +263,8 @@ typedef struct arg_hdr {
 	~table(); ///< destructor
 
 	/// Add new item in argtable
-	iterator addcmd(cmd&&);
+//	iterator addcmd(cmd&&);
+	iterator addcmd(xcmd&&);
 
 	template <typename It>
 	iterator add(It* &&it);
@@ -217,7 +279,8 @@ typedef struct arg_hdr {
 
     protected:
 
-	std::list<cmd> stor;
+//	std::list<cmd> stor;
+	std::list<xcmd> stor;
 
 
     }; /* table */
