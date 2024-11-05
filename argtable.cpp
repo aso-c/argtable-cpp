@@ -568,17 +568,13 @@ template void* Arg::seed<struct arg_end>::pure();
 
 template <typename It>
 /*inline*/ Arg::iterator Arg::table::add(It* &&it) {
-    ESP_LOGI(__FUNCTION__, "Adding the command from the temporary [It* &&] [%p]", it);
 
 	//Arg::seed<It>* tmp = new Arg::seed<It>(std::move(it));
-
-//    ESP_LOGI(__FUNCTION__, "Temporary seed object tmp [%p]", tmp);
 
 //	auto res = addcmd(cmd(std::move(tmp)));
 //	auto res = addcmd(cmd(static_cast<item* &&>(std::move(tmp))));
 	auto res = addcmd(xcmd(it));
 
-    ESP_LOGI(__FUNCTION__, "Inserted as [%p]", &(*res));
 
     return res;
 	// return addcmd(cmd(static_cast<item* &&>(new seed/*<It>*/(std::move(it)))));
@@ -640,24 +636,12 @@ std::vector<void*>& Arg::table::syntax()
     /// if data is dirty - refresh the data
     if (dirty)
     {
-	ESP_LOGI(__FUNCTION__, "The new generation of the data");
-	//data = vector<void*>(stor.begin()->get(), stor.end()->get());
 	data.clear();
 	data.reserve(stor.size());
-	ESP_LOGI(__FUNCTION__, "Length of the data before new data generation: %i", data.size());
-	ESP_LOGI(__FUNCTION__, "Reserved length of the data before new data generation: %i", data.capacity());
 
-//	int i = 0;
-	//for (/*int i = 0;*/ auto/*&*/ c : stor)
 	for (auto c = stor.begin(); c != stor.end(); c++)
-	{
-	    ESP_LOGI(__FUNCTION__, "Push back the item value during the data regeneration, item addr: [%p]", c->get());
-	    ESP_LOGI(__FUNCTION__, "################ arg_xxx item convertion addr[%p]", (void*)c->get()/*->pure()*/);
 	    data.push_back((void*)c->get());
-//	    data[i++] = c.get();
-	}; /* for auto& c : stor */
 	dirty = false;
-	ESP_LOGI(__FUNCTION__, "Length of the data after data regeneration: %i", data.size());
 
     }; /* if dirty */
     return data;
