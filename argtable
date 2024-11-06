@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 25.10.2024
- *	@version 0.4
+ *	      Updated 06.11.2024
+ *	@version 0.5
  */
 
 
@@ -30,42 +30,23 @@ namespace Arg
 {
 
 
-#if 0
-/*
- * The arg_hdr struct defines properties that are common to all arg_xxx structs.
- * The argtable library requires each arg_xxx struct to have an arg_hdr
- * struct as its first data member.
- * The argtable library functions then use this data to identify the
- * properties of the command line option, such as its option tags,
- * datatype string, and glossary strings, and so on.
- * Moreover, the arg_hdr struct contains pointers to custom functions that
- * are provided by each arg_xxx struct which perform the tasks of parsing
- * that particular arg_xxx arguments, performing post-parse checks, and
- * reporting errors.
- * These functions are private to the individual arg_xxx source code
- * and are the pointer to them are initiliased by that arg_xxx struct's
- * constructor function. The user could alter them after construction
- * if desired, but the original intention is for them to be set by the
- * constructor and left unaltered.
- */
-typedef struct arg_hdr {
-    char flag;             /* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
-    const char* shortopts; /* String defining the short options */
-    const char* longopts;  /* String defiing the long options */
-    const char* datatype;  /* Description of the argument data type */
-    const char* glossary;  /* Description of the option as shown by arg_print_glossary function */
-    int mincount;          /* Minimum number of occurences of this option accepted */
-    int maxcount;          /* Maximum number of occurences if this option accepted */
-    void* parent;          /* Pointer to parent arg_xxx struct */
-    arg_resetfn* resetfn;  /* Pointer to parent arg_xxx reset function */
-    arg_scanfn* scanfn;    /* Pointer to parent arg_xxx scan function */
-    arg_checkfn* checkfn;  /* Pointer to parent arg_xxx check function */
-    arg_errorfn* errorfn;  /* Pointer to parent arg_xxx error function */
-    void* priv;            /* Pointer to private header data for use by arg_xxx functions */
-} arg_hdr_t;
-#endif
-
-
+   /*
+    * The arg_hdr struct defines properties that are common to all arg_xxx structs.
+    * The argtable library requires each arg_xxx struct to have an arg_hdr
+    * struct as its first data member.
+    * The argtable library functions then use this data to identify the
+    * properties of the command line option, such as its option tags,
+    * datatype string, and glossary strings, and so on.
+    * Moreover, the arg_hdr struct contains pointers to custom functions that
+    * are provided by each arg_xxx struct which perform the tasks of parsing
+    * that particular arg_xxx arguments, performing post-parse checks, and
+    * reporting errors.
+    * These functions are private to the individual arg_xxx source code
+    * and are the pointer to them are initiliased by that arg_xxx struct's
+    * constructor function. The user could alter them after construction
+    * if desired, but the original intention is for them to be set by the
+    * constructor and left unaltered.
+    */
     struct header: public arg_hdr
     {
 	header& assign(const arg_hdr& hdr) {set(*this, hdr); return *this;};
@@ -222,7 +203,7 @@ typedef struct arg_hdr {
 	xcmd(iT* &&it): xcmd(it) { it = nullptr; };
 
 	/// Only move-constructors with all possible variants!!!
-	xcmd(xcmd &other): xcmd(std::move(other)) /*held(std::move(other.held))*/ {};
+	xcmd(xcmd &other): xcmd(std::move(other)) {};
 	xcmd(xcmd &&other): held(std::move(other.held)) { other.held = static_cast<struct arg_rem*>(nullptr); };
 
 	virtual ~xcmd() /*{arg_freetable( held.get(), 1);}*/;
@@ -236,7 +217,6 @@ typedef struct arg_hdr {
 	xcmd& operator =(It&& it) { return assign(it); }
 
 
-//    protected:
 
 	std::variant<struct arg_rem*,
 		    struct arg_lit*,
@@ -250,9 +230,6 @@ typedef struct arg_hdr {
     }; /* class xcmd */
 
 
-//    template<typename arg_end*>
-//    std::list(int, arg_end*) -> std::list<cmd>(int, Arg::end)
-
     using iterator = std::list<xcmd>::iterator;
 
     // C++ wrapper for definition arctable functionality
@@ -263,7 +240,6 @@ typedef struct arg_hdr {
 	~table(); ///< destructor
 
 	/// Add new item in argtable
-//	iterator addcmd(cmd&&);
 	iterator addcmd(xcmd&&);
 
 	template <typename It>
@@ -279,7 +255,6 @@ typedef struct arg_hdr {
 
     protected:
 
-//	std::list<cmd> stor;
 	std::list<xcmd> stor;
 
 

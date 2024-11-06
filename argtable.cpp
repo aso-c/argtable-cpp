@@ -5,8 +5,8 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 25.10.2024
- *	@version 0.4
+ *	      Updated 06.11.2024
+ *	@version 0.5
  */
 
 
@@ -567,30 +567,18 @@ template void* Arg::seed<struct arg_end>::pure();
 
 
 template <typename It>
-/*inline*/ Arg::iterator Arg::table::add(It* &&it) {
+Arg::iterator Arg::table::add(It* &&it) {
 
-	//Arg::seed<It>* tmp = new Arg::seed<It>(std::move(it));
+    return addcmd(xcmd(it));
 
-//	auto res = addcmd(cmd(std::move(tmp)));
-//	auto res = addcmd(cmd(static_cast<item* &&>(std::move(tmp))));
-	auto res = addcmd(xcmd(it));
-
-
-    return res;
-	// return addcmd(cmd(static_cast<item* &&>(new seed/*<It>*/(std::move(it)))));
 }; /* table::add<It, C>(It* &&it) */
 
-
-#if 0
-arg_end
-#endif
 
 template Arg::iterator Arg::table::add<struct arg_rem>(struct arg_rem* &&it);
 template Arg::iterator Arg::table::add<arg_lit>(struct arg_lit* &&it);
 template Arg::iterator Arg::table::add<arg_int>(struct arg_int* &&it);
 template Arg::iterator Arg::table::add<arg_dbl>(struct arg_dbl* &&it);
-template //</*arg_rex, Arg::rex*/>
-Arg::iterator Arg::table::add<arg_rex>(struct arg_rex* &&it);
+template Arg::iterator Arg::table::add<arg_rex>(struct arg_rex* &&it);
 template Arg::iterator Arg::table::add<arg_file>(struct arg_file* &&it);
 template Arg::iterator Arg::table::add<arg_date>(struct arg_date* &&it);
 
@@ -600,7 +588,7 @@ inline void* xget(std::variant<Stored...> stored)
 {
     if constexpr (std::variant_size_v<std::variant<Stored...>> != n)
     {
-	if /*constexpr*/ (stored.index() == n)
+	if (stored.index() == n)
 	    return static_cast<void*>(std::get<n>(stored));
 
 	return xget<n + 1, Stored...>(stored);
@@ -614,14 +602,12 @@ inline void* xget(std::variant<Stored...> stored)
 
 void* Arg::xcmd::get()
 {
-//    return static_cast<void*>(std::get<0>(held));
     return xget<0>(held);
 }; /* Arg::xcmd::get() */
 
 
 Arg::xcmd::~xcmd()
 {
-//    arg_freetable( std::get<held.index()>(held), 1);
     void * ptr = get();
     arg_freetable( &ptr, 1);
 }; /* Arg::xcmd::~xcmd() */
