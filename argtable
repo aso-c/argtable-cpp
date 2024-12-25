@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 06.11.2024
- *	@version 0.5
+ *	      Updated 25.12.2024
+ *	@version 0.5.1
  */
 
 
@@ -29,6 +29,14 @@
 namespace Arg
 {
 
+    namespace Rex
+    {
+	/// Flag for initializing struct arg_rex / Arg::rex: "none", empty flag
+	constexpr int None = 0;
+	/// Flag for initializing struct arg_rex / Arg::rex: ignoring case for matching
+	constexpr int ICase = ARG_REX_ICASE;
+
+    }; /* Rex */
 
    /*
     * The arg_hdr struct defines properties that are common to all arg_xxx structs.
