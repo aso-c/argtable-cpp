@@ -17,12 +17,20 @@
 
 #include "argtable3/argtable3.h"
 #include <list>
+
+
+//#include <string>
+//#include <list>
+#include <vector>
+#include <variant>
+
+
 #ifndef __cplusplus
 #error "'arctable' file is usable in C++ projects only."
 #endif
 
 #ifndef ARGTABLE3
-#error "Need include the 'arctable.h' file from the Arctable3 library before this header file"
+#error "The 'argtable3/arctable3.h' header from the Arctable3 library must be included before including this file"
 #endif
 
 
