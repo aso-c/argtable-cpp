@@ -16,11 +16,12 @@
 
 
 #include "argtable3/argtable3.h"
+
+#include <array>
 #include <list>
 
 
 //#include <string>
-//#include <list>
 #include <vector>
 #include <variant>
 
@@ -204,9 +205,11 @@ namespace Arg
 	/// swap the args
 	void swap(cmd&) noexcept;
 
+
     protected:
 	item* arg = nullptr;
     }; /* struct Arg::cmd */
+
 
     /// Smart pointer to argtable3 items
     class xcmd
@@ -272,6 +275,36 @@ namespace Arg
     protected:
 
 	std::list<xcmd> stor;
+
+
+	/// Use ckass Arg::table only as namespace
+    public:
+	/// define type name 'Arg::table::item'
+	using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+
+	template <typename ... Args>
+	class syntaxx
+	{
+	public:
+
+	    syntaxx(Args*... args, int n = 20);
+
+	    using description_t = std::array<item, (sizeof...(Args) + 1)>;
+	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
+
+	    description_t&
+		description() { return descript;};
+
+	    databuf_t&
+		content() { return buff; };
+
+	protected:
+
+	    description_t descript; 	// array with pointers to syntax item declarations (std::variant to argtable types)
+	    databuf_t buff;  	// array of void* pointers to a synata item declarations
+	}; /* struct Arg::table::syntax */
+
+
 
 
     }; /* table */
