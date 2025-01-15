@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 25.12.2024
- *	@version 0.5.1
+ *	      Updated 14.01.2025
+ *	@version 0.5.2
  */
 
 
@@ -34,6 +34,60 @@
 #error "The 'argtable3/arctable3.h' header from the Arctable3 library must be included before including this file"
 #endif
 
+
+namespace arg
+{
+    namespace table
+    {
+
+	/// Syntax complex definition
+	template <typename ... Args>
+	class syntax
+	{
+	public:
+
+	    /// define type name 'Arg::table::item'
+	    using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+
+	    syntax(Args*... args, int n = 20):
+		buff(reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(n))),
+		description(args..., reinterpret_cast<struct arg_end>(buff[sizeof...(Args)]))
+	    {};
+
+	    using description_t = std::array<item, (sizeof...(Args) + 1)>;
+	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
+
+	    description_t description;	// array with pointers to syntax item declarations (std::variant to argtable types)
+
+	    databuf_t	  buff;		// array of void* pointers to a synata item declarations
+
+	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
+
+	    int errors() const { return errcnt; };
+
+	private:
+	    mutable int errcnt = 0;
+
+	}; /* struct arg::table::syntax */
+
+
+	/// Multi syntaxes complex definitions (now is not implemented yet)
+	template <typename ... Args>
+	struct multisyntax
+	{
+
+	}; /* struct arg::table::multisyntax */
+
+    };/* namespace arg::table */
+
+    ///< parsing the sended parameters
+    template <typename ... Args>
+    inline int table::syntax<Args...>::parse(int argc, char* argv[]) const {
+	return (errcnt = arg_parse(argc, argv, &buff));
+    }; /* table::syntax<Args...>::parse() */
+
+
+}; /* namespace arg */
 
 namespace Arg
 {
@@ -64,16 +118,16 @@ namespace Arg
     * if desired, but the original intention is for them to be set by the
     * constructor and left unaltered.
     */
-    struct header: public arg_hdr
+    struct head: public arg_hdr
     {
-	header& assign(const arg_hdr& hdr) {set(*this, hdr); return *this;};
+	head& assign(const arg_hdr& hdr) {set(*this, hdr); return *this;};
 //	header& assign(const header& hdr) {set(*this, static_cast<const arg_hdr&>(hdr)); return *this;};
-	header& assign(const arg_hdr&& hdr) {set(*this, hdr); return *this;};
+	head& assign(const arg_hdr&& hdr) {set(*this, hdr); return *this;};
 //	header& assign(const header&& hdr) {set(*this, static_cast<arg_hdr&&>(hdr)); return *this;};
 
 	static void set(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
 	static void set(arg_hdr& dest, arg_hdr&& tsrc);		///< move values of temporary "tsrs" to the "dest"
-    }; /* arg_hdr */
+    }; /* struct Arg::head */
 
 
 
@@ -81,15 +135,15 @@ namespace Arg
     struct item
     {
 	/// Get stored hdr field
-	virtual arg_hdr& header() = 0;
-	const   arg_hdr& header() const;
+	virtual arg_hdr& hdr() = 0;
+	const   arg_hdr& hdr() const;
 	virtual item* clone() const = 0;	///< Clone object of the derived from the Arg::item type
 	virtual void *pure() = 0;		///< Return the converted this to the void*
 	virtual operator void*() = 0;		///< Converting item to a void*
 	/// Set stored hdr field
-	void header(const item& it) { header(it.header()); };
-	void header(const arg_hdr&);
-	void header(arg_hdr&&);
+	void hdr(const item& it) { hdr(it.hdr()); };
+	void hdr(const arg_hdr&);
+	void hdr(arg_hdr&&);
 	virtual ~item() {};
 
     protected:
@@ -123,7 +177,7 @@ namespace Arg
 	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the temporarily [Arg::seed&&] obj: [%p] into [%p]", &arg, this);
 	};
 	/// Get stored hdr field
-	arg_hdr& header() override { return kind::hdr; };
+	arg_hdr& hdr() override { return kind::hdr; };
 	/// clone the Arg::end instance into allocated memory object
 	seed* clone() const override { return new seed(this); };
 	/// Return the converted this to the void*
@@ -135,7 +189,6 @@ namespace Arg
 	seed& assign(kind* && parg) {
 	    ESP_LOGI(__FUNCTION__, "Assign the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
 	    assign(const_cast<const kind&>(*parg)); free(parg); return *this;};
-//	seed& assign(const seed& arg) {return assign(static_cast<kind>(arg));};
 	seed& operator = (kind* &&parg) {
 	    ESP_LOGI(__FUNCTION__, "Operator = the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
 	    return assign(std::move(parg)); };
@@ -275,36 +328,6 @@ namespace Arg
     protected:
 
 	std::list<xcmd> stor;
-
-
-	/// Use ckass Arg::table only as namespace
-    public:
-	/// define type name 'Arg::table::item'
-	using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
-
-	template <typename ... Args>
-	class syntaxx
-	{
-	public:
-
-	    syntaxx(Args*... args, int n = 20);
-
-	    using description_t = std::array<item, (sizeof...(Args) + 1)>;
-	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
-
-	    description_t&
-		description() { return descript;};
-
-	    databuf_t&
-		content() { return buff; };
-
-	protected:
-
-	    description_t descript; 	// array with pointers to syntax item declarations (std::variant to argtable types)
-	    databuf_t buff;  	// array of void* pointers to a synata item declarations
-	}; /* struct Arg::table::syntax */
-
-
 
 
     }; /* table */

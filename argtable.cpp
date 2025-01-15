@@ -5,7 +5,7 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 06.11.2024
+ *	      Updated 14.01.2025
  *	@version 0.5
  */
 
@@ -69,12 +69,8 @@ typedef struct arg_hdr {
 #endif
 
 
-// arg_hdr& Arg::header() = 0;
-// virtual void Arg::header(arg_hdr&&) = 0;
-// virtual void Arg::header(const arg_hdr&) = 0;
-
 /// assign values of "srs" to "dest"
-void Arg::header::set(struct arg_hdr& dest, const arg_hdr& src)
+void Arg::head::set(struct arg_hdr& dest, const arg_hdr& src)
 {
     ESP_LOGI(__FUNCTION__, "Set Arg Header from !!!long lifetime value");
     dest.flag  = src.flag /*char flag*/;	/* Modifier flags: ARG_TERMINATOR, ARG_HASVALUE. */
@@ -94,7 +90,7 @@ void Arg::header::set(struct arg_hdr& dest, const arg_hdr& src)
 
 
 /// move values of temporary "tsrs" to "dest"
-void Arg::header::set(arg_hdr& dest, arg_hdr&& tsrc)
+void Arg::head::set(arg_hdr& dest, arg_hdr&& tsrc)
 {
     ESP_LOGI(__FUNCTION__, "Set Arg Header from $$$temporary lifetime value");
     set(dest, tsrc);
@@ -118,22 +114,23 @@ void Arg::header::set(arg_hdr& dest, arg_hdr&& tsrc)
 
 
 
-const arg_hdr& Arg::item::header() const
+const arg_hdr& Arg::item::hdr() const
+////const arg_hdr& Arg::item::header() const
 {
-    return const_cast<item*>(this)->header();
-}; /* const arg_hdr& Arg::item::header() const */
+    return const_cast<item*>(this)->hdr();
+}; /* const arg_hdr& Arg::item::hdr() const */
 
 /// Set stored hdr field
-void Arg::item::header(const arg_hdr& src)
+void Arg::item::hdr(const arg_hdr& src)
 {
-    Arg::header::set(header(), src);
-}; /* Arg::item::header(const arg_hdr&) */
+    Arg::head::set(hdr(), src);
+}; /* Arg::item::hdr(const arg_hdr&) */
 
 
-void Arg::item::header(arg_hdr&& tmpsrc)
+void Arg::item::hdr(arg_hdr&& tmpsrc)
 {
-    Arg::header::set(header(), std::move(tmpsrc));
-}; /* Arg::item::header(arg_hdr&&) */
+    Arg::head::set(hdr(), std::move(tmpsrc));
+}; /* Arg::item::hdr(arg_hdr&&) */
 
 
 
@@ -161,7 +158,7 @@ Arg::rem& Arg::rem::assign(const struct arg_rem& other)
 {
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_rem&] value other: [%p] to Arg::rem [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_rem::hdr, other.hdr);
     return *this;
 }; /* Arg::rem::assign(const arg_rem&) */
 
@@ -194,12 +191,11 @@ Arg::lit& Arg::lit::assign(const struct arg_lit& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_lit&] value other: [%p] to Arg::lit [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_lit::hdr, other.hdr);
 	count = other.count;
     }; /* if this != &other */
     return *this;
 }; /* Arg::lit::assign(const arg_lit&) */
-
 
 
 
@@ -227,7 +223,7 @@ Arg::integer& Arg::integer::assign(const struct arg_int& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_int&] value other: [%p] to Arg::integer [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_int::hdr, other.hdr);
 	count = other.count;
 	ival  = other.ival;       /* Array of parsed argument values */
     }; /* if this != &other */
@@ -262,7 +258,7 @@ Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_dbl&] value other: [%p] to Arg::dbl [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_dbl::hdr, other.hdr);
 	count = other.count;
 	dval  = other.dval;       /* Array of parsed argument values */
     }; /* if this != &other */
@@ -297,7 +293,7 @@ Arg::str& Arg::str::assign(const struct arg_str& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_str&] value other: [%p] to Arg::str [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_str::hdr, other.hdr);
 	count = other.count;
 	sval  = other.sval;  /* Array of parsed argument values */
     }; /* if this != &other */
@@ -333,7 +329,7 @@ Arg::rex& Arg::rex::assign(const struct arg_rex& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_rex&] value other: [%p] to Arg::rex [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_rex::hdr, other.hdr);
 	count = other.count;
 	sval  = other.sval;  /* Array of parsed argument values */
     }; /* if this != &other */
@@ -371,7 +367,7 @@ Arg::file& Arg::file::assign(const struct arg_file& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_file&] value other: [%p] to Arg::file [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_file::hdr, other.hdr);
 	count    = other.count;
 	filename = other.filename;  /* Array of parsed filenames  (eg: /home/foo.bar) */
 	basename = other.filename;  /* Array of parsed basenames  (eg: foo.bar) */
@@ -409,7 +405,7 @@ Arg::date& Arg::date::assign(const struct arg_date& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_date&] value other: [%p] to Arg::date [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_date::hdr, other.hdr);
 	count  = other.count;
 	format = other.format; /* strptime format string used to parse the date */
 	count  = other.count;  /* Number of matching command line args */
@@ -449,7 +445,7 @@ Arg::end& Arg::end::assign(const struct arg_end& other)
     ESP_LOGI(__FUNCTION__, "Assign the [const arg_end&] value other: [%p] to Arg::end [%p]", &other, this);
     if (this != &other)	///< prevent autoassigment
     {
-	Arg::header::set(hdr, other.hdr);
+	Arg::head::set(arg_end::hdr, other.hdr);
 	count  = other.count;
 	error  = other.error;
 	parent = other.parent;
@@ -458,15 +454,6 @@ Arg::end& Arg::end::assign(const struct arg_end& other)
     return *this;
 }; /* Arg::end::assign(const arg_end&) */
 
-
-
-
-///// Initializing the Arg::cmd with l-value, long lifetime pointer
-//Arg::cmd::cmd(item* const pitm):
-//	arg(new item(pitm))
-//{
-//    ESP_LOGI(__FUNCTION__, "Create Arg::cmd object from the [const Arg::item*]");
-//}; /* Arg::cmd::cmd(const item*) */
 
 
 /// Initializing the Arg::cmd with temporary lifetime pointer

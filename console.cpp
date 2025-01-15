@@ -95,12 +95,12 @@ namespace esp
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
 
-	///< parsing the sended parameters
-	int cmd::parse(int argc, char* argv[]) const
-	{
-	    errcnt = arg_parse(argc, argv, static_cast<void**>(argtable));
-	    return errcnt;
-	}; /* esp::console::cmd::parse */
+//	///< parsing the sended parameters
+//	int cmd::parse(int argc, char* argv[]) const
+//	{
+//	    errcnt = arg_parse(argc, argv, static_cast<void**>(argtable));
+//	    return errcnt;
+//	}; /* esp::console::cmd::parse */
 
 //	esp_err_t cmd::core_exec(int argc, char* argv[])
 //	{
