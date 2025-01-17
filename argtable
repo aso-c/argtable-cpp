@@ -40,26 +40,45 @@ namespace arg
     namespace table
     {
 
+//#if 0
+	namespace item
+	{
+	    using holder = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+
+	    template <std::size_t size>
+	    using row = std::array<holder, size>;
+
+	    template <std::size_t rowsize>
+	    using multiholder = row<rowsize>;
+
+	    class router
+	    {
+
+	    }; /* class arg::table::item::router */
+	}; /* namespace arg::table::item */
+//#endif
+
 	/// Syntax complex definition
-	template <typename ... Args>
+	template <typename... Args>
 	class syntax
 	{
 	public:
 
 	    /// define type name 'Arg::table::item'
-	    using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+//	    using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
 
-	    syntax(Args*... args, int n = 20):
-		buff(reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(n))),
-		description(args..., reinterpret_cast<struct arg_end>(buff[sizeof...(Args)]))
+
+	    syntax(Args*... args, int n = 20)//:
+	//	buff(reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(n))),
+	//	description(args..., reinterpret_cast<struct arg_end>(buff[sizeof...(Args)]))
 	    {};
 
-	    using description_t = std::array<item, (sizeof...(Args) + 1)>;
+	    using description_t = std::array<item::holder, (sizeof...(Args) + 1)>;
 	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
 
 	    description_t description;	// array with pointers to syntax item declarations (std::variant to argtable types)
 
-	    databuf_t	  buff;		// array of void* pointers to a synata item declarations
+	    databuf_t	  keep;		// array of void* pointers to a synata item declarations
 
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
 
@@ -69,6 +88,11 @@ namespace arg
 	    mutable int errcnt = 0;
 
 	}; /* struct arg::table::syntax */
+
+	template <typename ... Args>
+	    syntax(Args*...) -> syntax<Args...>;
+	template <typename ... Args>
+	    syntax(Args*..., int ) -> syntax<Args...>;
 
 
 	/// Multi syntaxes complex definitions (now is not implemented yet)
@@ -83,7 +107,7 @@ namespace arg
     ///< parsing the sended parameters
     template <typename ... Args>
     inline int table::syntax<Args...>::parse(int argc, char* argv[]) const {
-	return (errcnt = arg_parse(argc, argv, &buff));
+	return (errcnt = arg_parse(argc, argv, keep/*.data()*/));
     }; /* table::syntax<Args...>::parse() */
 
 
