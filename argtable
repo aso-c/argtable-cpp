@@ -51,6 +51,9 @@ namespace arg
 	    template <std::size_t rowsize>
 	    using multiholder = row<rowsize>;
 
+	    template <std::size_t size>
+	    using keeper_t = std::array<void*, size>;
+
 	    class router
 	    {
 
@@ -59,26 +62,26 @@ namespace arg
 //#endif
 
 	/// Syntax complex definition
-	template <typename... Args>
+	template <std::size_t size>
 	class syntax
 	{
 	public:
 
-	    /// define type name 'Arg::table::item'
-//	    using item = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
 
-
-	    syntax(Args*... args, int n = 20)//:
-	//	buff(reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(n))),
-	//	description(args..., reinterpret_cast<struct arg_end>(buff[sizeof...(Args)]))
+	    template <typename... Args>
+	    syntax(Args*... args/*, int n = 20*/):
+		keep{reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
+		description{args..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Args)])}
 	    {};
 
-	    using description_t = std::array<item::holder, (sizeof...(Args) + 1)>;
-	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
+//	    using description_t = std::array<item::holder, (sizeof...(Args) + 1)>;
+//	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
 
-	    description_t description;	// array with pointers to syntax item declarations (std::variant to argtable types)
+	    //	    databuf_t	  keep;		// array of void* pointers to a synata item declarations
+	    item::keeper_t<size+1>  keep;		// array of void* pointers to a synata item declarations
 
-	    databuf_t	  keep;		// array of void* pointers to a synata item declarations
+//	    description_t description;	// array with pointers to syntax item declarations (std::variant to argtable types)
+	    item::row<size+1>	description;	// array with pointers to syntax item declarations (std::variant to argtable types)
 
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
 
@@ -90,13 +93,14 @@ namespace arg
 	}; /* struct arg::table::syntax */
 
 	template <typename ... Args>
-	    syntax(Args*...) -> syntax<Args...>;
-	template <typename ... Args>
-	    syntax(Args*..., int ) -> syntax<Args...>;
+	    syntax(Args*...) -> syntax<sizeof...(Args)>;
+//	template <typename ... Args>
+//	    syntax(Args*..., int ) -> syntax<sizeof...(Args)>;
 
 
-	/// Multi syntaxes complex definitions (now is not implemented yet)
-	template <typename ... Args>
+	///TODO  Definition multi syntaxes complex (now is not implemented yet)
+//	template <typename ... Args>
+	template <std::size_t rows, std::size_t columns>
 	struct multisyntax
 	{
 
@@ -105,8 +109,9 @@ namespace arg
     };/* namespace arg::table */
 
     ///< parsing the sended parameters
-    template <typename ... Args>
-    inline int table::syntax<Args...>::parse(int argc, char* argv[]) const {
+//    template <typename ... Args>
+    template <std::size_t size>
+    inline int table::syntax<size>::parse(int argc, char* argv[]) const {
 	return (errcnt = arg_parse(argc, argv, keep/*.data()*/));
     }; /* table::syntax<Args...>::parse() */
 
