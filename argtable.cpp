@@ -30,6 +30,26 @@
 #include "argtable"
 
 
+namespace arg
+{
+    /// Stub with empty command execution body
+    template <>
+    esp_err_t table::act::invoke<nullptr>(int argc, char* argv[]) {
+	return ESP_OK;
+    }; /* act::invoke<nullptr>() */
+
+    /// Stub for empty help
+    template <>
+    esp_err_t table::act::help<nullptr>(int argc, char* argv[]) {
+	return ESP_OK;
+    }; /* act::invoke<nullptr>() */
+
+}; /* namespace arg */
+
+
+
+
+
 //TODO Будущая реализация: 1) создать иерархию виртуальных наследников базового класса ArgBase для каждого конкретного типа arg's
 //TODO Будущая реализация: 2) Argtable хранит список std::list элементов ArgBase и генерирует "на лету" массив std::vector из указателей void* на элементы списка аргументов
 

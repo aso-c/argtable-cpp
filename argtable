@@ -40,26 +40,27 @@ namespace arg
     namespace table
     {
 
-//#if 0
 	namespace item
 	{
 	    using holder = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
 
+	    /// array of the syntax items
 	    template <std::size_t size>
 	    using row = std::array<holder, size>;
 
 	    template <std::size_t rowsize>
 	    using multiholder = row<rowsize>;
 
+	    /// array of the void* pointers to the syntax data item buffers
 	    template <std::size_t size>
 	    using keeper_t = std::array<void*, size>;
 
+	    //TODO Route executing procedures for differen types in the arg::table::item::holder
 	    class router
 	    {
 
 	    }; /* class arg::table::item::router */
 	}; /* namespace arg::table::item */
-//#endif
 
 	/// Syntax complex definition
 	template <std::size_t size>
@@ -74,13 +75,8 @@ namespace arg
 		description{args..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Args)])}
 	    {};
 
-//	    using description_t = std::array<item::holder, (sizeof...(Args) + 1)>;
-//	    using databuf_t = std::array<void*, (sizeof...(Args) + 1)>;
-
-	    //	    databuf_t	  keep;		// array of void* pointers to a synata item declarations
 	    item::keeper_t<size+1>  keep;		// array of void* pointers to a synata item declarations
 
-//	    description_t description;	// array with pointers to syntax item declarations (std::variant to argtable types)
 	    item::row<size+1>	description;	// array with pointers to syntax item declarations (std::variant to argtable types)
 
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
@@ -94,8 +90,6 @@ namespace arg
 
 	template <typename ... Args>
 	    syntax(Args*...) -> syntax<sizeof...(Args)>;
-//	template <typename ... Args>
-//	    syntax(Args*..., int ) -> syntax<sizeof...(Args)>;
 
 
 	///TODO  Definition multi syntaxes complex (now is not implemented yet)
@@ -106,10 +100,23 @@ namespace arg
 
 	}; /* struct arg::table::multisyntax */
 
+
+	/// action procedures & templates for the syntaxes
+	namespace act
+	{
+	    /// Execute command procedure with the pointer to the own syntax object
+	    template <auto extsyntax>
+	    esp_err_t invoke(int argc, char* argv[]);
+
+	    /// Run the Help procedure with the pointer to the own syntax object
+	    template <auto extsyntax>
+	    esp_err_t help(int argc, char* argv[]);
+
+	}; /* namespace arg::table::act */
+
     };/* namespace arg::table */
 
     ///< parsing the sended parameters
-//    template <typename ... Args>
     template <std::size_t size>
     inline int table::syntax<size>::parse(int argc, char* argv[]) const {
 	return (errcnt = arg_parse(argc, argv, keep/*.data()*/));
