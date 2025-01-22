@@ -88,31 +88,11 @@ namespace esp
 	//	.context = nullptr
 	//}); /* bt_cmd */
 
-
 	/// register the current command
 	esp_err_t cmd::enreg() const
 	{
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
-
-//	///< parsing the sended parameters
-//	int cmd::parse(int argc, char* argv[]) const
-//	{
-//	    errcnt = arg_parse(argc, argv, static_cast<void**>(argtable));
-//	    return errcnt;
-//	}; /* esp::console::cmd::parse */
-
-//	esp_err_t cmd::core_exec(int argc, char* argv[])
-//	{
-//	    return executor(argc, argv, this);
-//	}; /* esp::console::cmd::core_exec() */
-//
-//	esp_err_t cmd::context_exec_core(void* context, int argc, char* argv[])
-//	{
-//	    return context_exec(context, argc, argv, this);
-//	}; /* esp::console::cmd::context_exec_core() */
-
-
 
     }; /* namespace esp::console */
 

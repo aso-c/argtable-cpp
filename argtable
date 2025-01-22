@@ -62,7 +62,7 @@ namespace arg
 	    }; /* class arg::table::item::router */
 	}; /* namespace arg::table::item */
 
-	/// Syntax complex definition
+	/// Syntax class definition
 	template <std::size_t size>
 	class syntax
 	{
@@ -101,18 +101,24 @@ namespace arg
 	}; /* struct arg::table::multisyntax */
 
 
-	/// action procedures & templates for the syntaxes
-	namespace act
+	/// Define class for command action, procedures & templates with the syntaxes
+//	namespace act
+	template <auto extsntx>
+	class act
 	{
+	public:
 	    /// Execute command procedure with the pointer to the own syntax object
-	    template <auto extsyntax>
+//	    template <auto extsyntax>
+	    static
 	    esp_err_t invoke(int argc, char* argv[]);
 
 	    /// Run the Help procedure with the pointer to the own syntax object
-	    template <auto extsyntax>
+//	    template <auto extsyntax>
+	    static
 	    esp_err_t help(int argc, char* argv[]);
 
-	}; /* namespace arg::table::act */
+	}; /* class arg::table::act */
+//	}; /* namespace arg::table::act */
 
     };/* namespace arg::table */
 

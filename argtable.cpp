@@ -34,13 +34,13 @@ namespace arg
 {
     /// Stub with empty command execution body
     template <>
-    esp_err_t table::act::invoke<nullptr>(int argc, char* argv[]) {
+    esp_err_t table::act<nullptr>::invoke(int argc, char* argv[]) {
 	return ESP_OK;
     }; /* act::invoke<nullptr>() */
 
     /// Stub for empty help
     template <>
-    esp_err_t table::act::help<nullptr>(int argc, char* argv[]) {
+    esp_err_t table::act<nullptr>::help(int argc, char* argv[]) {
 	return ESP_OK;
     }; /* act::invoke<nullptr>() */
 

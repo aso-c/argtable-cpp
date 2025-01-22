@@ -46,10 +46,6 @@ namespace esp
 	struct cmd: public esp_console_cmd_t
 	{
 
-//	    typedef esp_err_t (*exec_t) (int argc, char* argv[], cmd* cmd_ctxt);
-//	    typedef esp_err_t (*cntxt_exec_t) (void* context, int argc, char* argv[], cmd* cmd_ctxt);
-
-
 	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
 			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
 			void* /*.argtable*/ syntaxtable = nullptr /*bt::syntax*/,
@@ -85,23 +81,41 @@ namespace esp
 //			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
 			Act_w_cntxt&& /*.argtable & .func_w_context & .context*/ cntxtact /*bt::syntax*/,
 			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*///,
+			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
+			void* /*.context*/ cntxt = nullptr
+							):
+		cmd(name, cntxtact.invoke, cntxtact.syntax.buffer, help_str, hint_str)
+		{};
+
+
+	    template <class Syntax>
+	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
+			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
+			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
+			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
+			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
+//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
 //			void* /*.context*/ cntxt = nullptr
-							);
+							):
+		cmd(name, exe, syntax.keep.data(), help_str, hint_str)
+		{};
+
+	    template <class Syntax>
+	    cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
+//			esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
+			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
+			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
+			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
+			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
+			void* /*.context*/ cntxt = nullptr
+							):
+		cmd(name, context_exe, syntax.keep.data(), help_str, hint_str)
+		{};
 
 
 	    esp_err_t enreg() const;	///< register current command
 
-//	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
-
 	    int errors() const { return errcnt; };
-
-
-	    //exec_t executor;
-	    //cntxt_exec_t context_exec;
-
-//	    esp_err_t core_exec(int argc, char* argv[]);
-//	    esp_err_t context_exec_core(void* context, int argc, char* argv[]);
 
 	private:
 	    mutable int errcnt = 0;
