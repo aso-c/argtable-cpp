@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 14.01.2025
- *	@version 0.5.2
+ *	      Updated 22.01.2025
+ *	@version 0.5.3
  */
 
 
@@ -81,7 +81,7 @@ namespace arg
 
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
 
-	    int errors() const { return errcnt; };
+	    int err() const { return errcnt; };	///< error status of the last operation
 
 	private:
 	    mutable int errcnt = 0;
@@ -93,7 +93,6 @@ namespace arg
 
 
 	///TODO  Definition multi syntaxes complex (now is not implemented yet)
-//	template <typename ... Args>
 	template <std::size_t rows, std::size_t columns>
 	struct multisyntax
 	{
@@ -102,30 +101,26 @@ namespace arg
 
 
 	/// Define class for command action, procedures & templates with the syntaxes
-//	namespace act
 	template <auto extsntx>
 	class act
 	{
 	public:
 	    /// Execute command procedure with the pointer to the own syntax object
-//	    template <auto extsyntax>
 	    static
 	    esp_err_t invoke(int argc, char* argv[]);
 
 	    /// Run the Help procedure with the pointer to the own syntax object
-//	    template <auto extsyntax>
 	    static
 	    esp_err_t help(int argc, char* argv[]);
 
 	}; /* class arg::table::act */
-//	}; /* namespace arg::table::act */
 
     };/* namespace arg::table */
 
     ///< parsing the sended parameters
     template <std::size_t size>
     inline int table::syntax<size>::parse(int argc, char* argv[]) const {
-	return (errcnt = arg_parse(argc, argv, keep/*.data()*/));
+	return (errcnt = arg_parse(argc, argv, const_cast<void**>(keep.data())));
     }; /* table::syntax<Args...>::parse() */
 
 

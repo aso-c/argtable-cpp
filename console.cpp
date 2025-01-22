@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.1
+ * @version 0.5.3
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 25.12.2024
+ *	    Updated: 22.01.2025
  */
 
 #if 0
@@ -51,8 +51,14 @@ namespace esp
     namespace console
     {
 	/// constructror for command execute w/o context
-	cmd::cmd(const char name[], esp_console_cmd_func_t /*exec_t*/ exe,
-		void* syntaxtable, const char help_str[], const char hint_str[]):
+	cmd::cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
+			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /* = global_lambda*/,
+			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
+			const char /*.help*/ help_str[] /* = nullptr*/ /*"General Bluetooth command"*/,
+			const char /*.hint*/ hint_str[] /* = nullptr*/ /*"Bluetooth command exec"*/
+//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
+//			void* /*.context*/ cntxt = nullptr
+	):
 		esp_console_cmd_t {
 			.command = name,
 		        .help = help_str,
@@ -65,15 +71,23 @@ namespace esp
 	{};
 
 	/// constructor for command execute implementation with context
-	cmd::cmd(char name[], esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ context_exec,
-		void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
+	cmd::cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
+//			esp_console_cmd_func_t /*.func*/ exe /* = global_lambda*/,
+			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ exec_wcontext /*= nullptr*/,
+			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
+			char /*.help*/ help_str[] /* = nullptr*/ /*"General Bluetooth command"*/,
+			char /*.hint*/ hint_str[] /* = nullptr*/ /*"Bluetooth command exec"*/,
+			void* /*.context*/ cntxt /* = nullptr*/
+	):
+//	cmd::cmd(char name[], esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ context_exec,
+//		void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
 		esp_console_cmd_t {
 			.command = name,
 		        .help = help_str,
 		        .hint = hint_str,
 		        .func = nullptr,
 			.argtable = syntaxtable,
-			.func_w_context = context_exec,
+			.func_w_context = exec_wcontext,
 			.context = cntxt
 	}
 	{};
