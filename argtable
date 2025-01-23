@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 22.01.2025
- *	@version 0.5.3
+ *	      Updated 23.01.2025
+ *	@version v.0.5.4
  */
 
 
@@ -72,57 +72,22 @@ namespace arg
 	    syntax(Args&&... args/*, int n = 20*/):
 		keep{reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
 		description{args..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Args)])}
-	    {
-		ESP_LOGW("=======>>> Construction of the template arg::table::syntax object", "Size of template is: %i", size());
-		ESP_LOGW("=======>>> Construction of the template arg::table::syntax object", "Size of the parameter pack is: %i", sizeof...(Args));
-		ESP_LOGW("=======>>> Construction of the template arg::table::syntax object", "Size of the description array is: %i", description.size());
-		ESP_LOGW("=======>>> Construction of the template arg::table::syntax object", "Size of the raw data keep array is: %i", keep.size());
-	    };
+	    {};
 
-#if 0
-	    /// Copy/move constructor
-	    template <typename Synt>
-	    syntax(Synt&& other):
-		keep{std::forward<Synt>(other.keep)},
-		description{std::forward<Synt>(other.description)}
-	    {
-		ESP_LOGW("=============================================================", "====================");
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", size());
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", description.size());
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", keep.size());
-		ESP_LOGW("=============================================================", "====================");
-	    };
-#endif
 	    /// Copy constructor
-//	    template <std::size_t sza>
-//	    syntax(const syntax<sza>& other):
 	    syntax(const syntax<sz>& other):
 		keep{other.keep},
 		description{other.description}
-	    {
-		ESP_LOGW("=============================================================", "====================");
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", size());
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", description.size());
-		ESP_LOGW("=======>>> Copy construction of the arg::table::syntax object", "Template size is: %i", keep.size());
-		ESP_LOGW("=============================================================", "====================");
-	    };
+	    {};
 	    /// Move constructor
-//	    template <std::size_t ozn>
-//	    syntax(syntax<ozn>&& other) noexcept:
 	    syntax(syntax<sz>&& other) noexcept:
 		keep{std::move(other.keep)},
 		description{std::move(other.description)}
-	    {
-		ESP_LOGW("=============================================================", "====================");
-		ESP_LOGW("=======>>> Move construction of the arg::table::syntax object", "Template size is: %i", size());
-		ESP_LOGW("=======>>> Move construction of the arg::table::syntax object", "Template size is: %i", description.size());
-		ESP_LOGW("=======>>> Move construction of the arg::table::syntax object", "Template size is: %i", keep.size());
-		ESP_LOGW("=============================================================", "====================");
-	    };
+	    {};
 
-	    item::keeper_t<sz+1>  keep;		// array of void* pointers to a synata item declarations
+	    item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synata item declarations
 
-	    item::row<sz + 1>	description;	// array with pointers to syntax item declarations (std::variant to argtable types)
+	    item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
 
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
 
@@ -130,32 +95,10 @@ namespace arg
 
 	    constexpr static std::size_t size() { return sz; };	///< for diagnostic purposes
 
-#if 0
-	    template <typename Synt>
-	    syntax& operator=(Synt&& other)
-	    {
-		keep = std::forward<Synt>(other.keep);
-		description = std::forward<Synt>(other.description);
-		return *this;
-	    }; /* operator=() */
-#endif
-//	    template <std::size_t ozn>
-//	    syntax& operator=(const syntax<ozn>& other)
-	    syntax& operator=(const syntax<sz>& other)
-	    {
-		keep = other.keep;
-		description = other.description;
-		return *this;
-	    }; /* operator=() */
-//	    template <std::size_t ozn>
-//	    syntax& operator=(syntax<ozn>&& other)
-	    syntax& operator=(syntax<sz>&& other)
-	    {
-//		keep = std::forward<ozn>(other.keep);
-		keep = std::move(other.keep);
-		description = std::move(other.description);
-		return *this;
-	    }; /* operator=() */
+	    /// copy assignment operator
+	    syntax& operator=(const syntax<sz>& other);
+	    /// copy assignment operator
+	    syntax& operator=(syntax<sz>&& other);
 
 	private:
 	    mutable int errcnt = 0;
@@ -167,6 +110,24 @@ namespace arg
 
 	template <std::size_t sz>
 	    syntax(syntax<sz>&) -> syntax<sz>;
+
+	/// copy assignment operator inline implementation
+	template <std::size_t sz>
+	inline syntax<sz>& syntax<sz>::operator=(const syntax<sz>& other)
+	{
+	    keep = other.keep;
+	    description = other.description;
+	    return *this;
+	}; /* operator=() */
+
+	/// move assignment operator inline implementation
+	template <std::size_t sz>
+	inline syntax<sz>& syntax<sz>::operator=(syntax<sz>&& other)
+	{
+	    keep = std::move(other.keep);
+	    description = std::move(other.description);
+	    return *this;
+	}; /* operator=() */
 
 
 
