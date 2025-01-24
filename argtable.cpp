@@ -5,8 +5,8 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 22.01.2025
- *	@version 0.5.3
+ *	      Updated 24.01.2025
+ *	@version 0.6.0
  */
 
 
@@ -32,15 +32,17 @@
 
 namespace arg
 {
+
     /// Stub with empty command execution body
-    template <>
-    esp_err_t table::act<nullptr>::invoke(int argc, char* argv[]) {
+    //template <nullptr>
+    esp_err_t arg::table::act<nullptr>::invoke_impl(int argc, char* argv[]) {
 	return ESP_OK;
     }; /* act::invoke<nullptr>() */
+    //template esp_err_t arg::table::act<nullptr>::invoke(int argc, char* argv[]);
 
     /// Stub for empty help
-    template <>
-    esp_err_t table::act<nullptr>::help(int argc, char* argv[]) {
+//    template <>
+    esp_err_t table::act<nullptr>::help_impl(int argc, char* argv[]) {
 	return ESP_OK;
     }; /* act::invoke<nullptr>() */
 

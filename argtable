@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 23.01.2025
- *	@version v.0.5.4
+ *	      Updated 24.01.2025
+ *	@version v.0.6.0
  */
 
 
@@ -85,13 +85,42 @@ namespace arg
 		description{std::move(other.description)}
 	    {};
 
-	    item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synata item declarations
+	    item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synatax item declarations
 
 	    item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
 
+	    /// print the [short] usage of the current syntax string
+	    void usage(FILE* fp, const char suffix[]) const {
+		arg_print_syntax(fp, std::get<struct arg_end*>(description.back()), suffix);
+	    };
+
+	    /// print the verbose usage of the current syntax string
+	    void verbose(FILE* fp, const char suffix[]) const {
+		arg_print_syntaxv(fp, std::get<struct arg_end*>(description.back()), suffix);
+	    };
+
+	    /// print the glossary for the syntax string
+	    void glossary(FILE* fp, const char format[]) const {
+		arg_print_glossary(fp, std::get<struct arg_end*>(description.back()), format);
+	    };
+
 	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
 
+	    /// check, if the syntax definitions - contained the NULL pointer items
+	    /// @return true (!NULL) - syntax definition row contain the NULL pointers
+	    ///		false (NULL) -  syntax definition row is NOT contained the NULL pointers
+	    bool nullcheck() const
+	    {
+		return arg_nullcheck(keep.data());
+	    };
+
 	    int err() const { return errcnt; };	///< error status of the last operation
+	    int error() const { return errcnt; };	///< error status of the last operation
+
+	    /// print the error status of the command line parsing
+	    void error(FILE* fp, const char pname[]) const {
+		arg_print_errors(fp, std::get<struct arg_end*>(description.back()), pname);
+	    };
 
 	    constexpr static std::size_t size() { return sz; };	///< for diagnostic purposes
 
@@ -140,27 +169,76 @@ namespace arg
 
 
 	/// Define class for command action, procedures & templates with the syntaxes
-	template <auto extsntx>
+	template <auto esyntx>
 	class act
 	{
 	public:
+
+	    typedef esp_err_t (invoke_func_t)(int argc, char* argv[]);
+
+	    /// constructor
+	    act(invoke_func_t* ext_invoke = invoke_impl): invoke(ext_invoke) {};
+
+	    /// Generatin the singleton object for the derived class
+	    template <class act_class>
+	    static act_class& instance_impl() {
+		    static act_class single;
+
+		return single;
+	    };
+
+	    //using instance = instance_impl<act>;
+
+	    decltype(*esyntx) &syntax = *esyntx;	// used syntax object with object of the class act instantation
+
+	    invoke_func_t *invoke;	// local object pointer to invoke() static implementation
+
 	    /// Execute command procedure with the pointer to the own syntax object
 	    static
-	    esp_err_t invoke(int argc, char* argv[]);
+	    esp_err_t invoke_impl(int argc, char* argv[]);
 
 	    /// Run the Help procedure with the pointer to the own syntax object
 	    static
-	    esp_err_t help(int argc, char* argv[]);
+	    esp_err_t help_impl(int argc, char* argv[]);
+
+
+	public:
+
+	    class context
+	    {
+	    public:
+
+		typedef esp_err_t (invoke_func_t)(void* context, int argc, char* argv[]);
+	    }; /* class arg::table::act::context */
 
 	}; /* class arg::table::act */
 
+	/// Specialization for the nullptr parameter
+	template <>
+	class act<nullptr>
+	{
+	    /// Execute command procedure with the pointer to the own syntax object
+	    static
+	    esp_err_t invoke_impl(int argc, char* argv[]);
+
+	    /// Run the Help procedure with the pointer to the own syntax object
+	    static
+	    esp_err_t help_impl(int argc, char* argv[]);
+	}; /* class arg::table::act<nullptr> */
+
     };/* namespace arg::table */
+
+//    //extern
+//    template<>
+//    esp_err_t table::act<nullptr>::invoke(int argc, char* argv[]);
 
     ///< parsing the sended parameters
     template <std::size_t size>
     inline int table::syntax<size>::parse(int argc, char* argv[]) const {
 	return (errcnt = arg_parse(argc, argv, const_cast<void**>(keep.data())));
     }; /* table::syntax<Args...>::parse() */
+
+
 
 
 }; /* namespace arg */
