@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 24.01.2025
- *	@version v.0.6.0
+ *	      Updated 27.01.2025
+ *	@version v.0.6.1
  */
 
 
@@ -170,53 +170,83 @@ namespace arg
 
 	/// Define class for command action, procedures & templates with the syntaxes
 	template <auto esyntx>
-	class act
+	class act_t
 	{
 	public:
 
-	    typedef esp_err_t (invoke_func_t)(int argc, char* argv[]);
+	    //typedef esp_err_t (invoke_func_t)(int argc, char* argv[]);
+	    using invoke_func_t = esp_console_cmd_func_t;
 
+	    /// Wrappwr for invoke command with context
+	    class context_t
+	    {
+	    public:
+
+		// typedef esp_err_t (invoke_func_t)(void* context, int argc, char* argv[]);
+		using invoke_func_t = esp_console_cmd_func_with_context_t;
+
+		invoke_func_t /***/invoke;	// local object pointer to invoke() static implementation
+
+	    protected:
+		context_t(invoke_func_t/***/ ext_invoke = invoke_impl): invoke(ext_invoke) {};
+		friend class act_t;
+
+		/// Execute command procedure with the pointer to the own syntax object
+		static
+		esp_err_t invoke_impl(void* context, int argc, char* argv[]) { return ESP_OK;  };
+
+
+	    }; /* class arg::table::act_t::context */
+
+	protected:
 	    /// constructor
-	    act(invoke_func_t* ext_invoke = invoke_impl): invoke(ext_invoke) {};
+	    act_t(invoke_func_t/***/ ext_invoke = invoke_impl): invoke(ext_invoke) {};
+	    act_t(context_t::invoke_func_t/***/ ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
 
+	public:
 	    /// Generatin the singleton object for the derived class
 	    template <class act_class>
 	    static act_class& instance_impl() {
 		    static act_class single;
 
 		return single;
-	    };
+	    }; /* template static arg::table::act_t::instance_impl() { */
 
 	    //using instance = instance_impl<act>;
 
 	    decltype(*esyntx) &syntax = *esyntx;	// used syntax object with object of the class act instantation
 
-	    invoke_func_t *invoke;	// local object pointer to invoke() static implementation
+	    invoke_func_t /***/invoke;	// local object pointer to invoke() static implementation
+
+	    context_t context;		// class-holder for the invoke cmd-procedure with context
 
 	    /// Execute command procedure with the pointer to the own syntax object
 	    static
-	    esp_err_t invoke_impl(int argc, char* argv[]);
+	    esp_err_t invoke_impl(int argc, char* argv[]) { return ESP_OK;  };
 
 	    /// Run the Help procedure with the pointer to the own syntax object
 	    static
 	    esp_err_t help_impl(int argc, char* argv[]);
 
-
-	public:
-
-	    class context
-	    {
-	    public:
-
-		typedef esp_err_t (invoke_func_t)(void* context, int argc, char* argv[]);
-	    }; /* class arg::table::act::context */
-
-	}; /* class arg::table::act */
+	}; /* class arg::table::act_t */
 
 	/// Specialization for the nullptr parameter
 	template <>
-	class act<nullptr>
+	class act_t<nullptr>
 	{
+	    /// stub type for zero syntax act_t specialization
+	    struct zero_syntax_stub
+	    {
+		void* data() { return nullptr; };
+	    }; /* act_t<nullptr>::zero_syntax_stub */
+
+	    zero_syntax_stub syntax;	///< stub for the "syntax" field of the act_t<nullptr> specialization
+
+//	    invoke_func_t invoke;	// local object pointer to invoke() static implementation
+
+//	    context_t context;		// class-holder for the invoke cmd-procedure with context
+
+
 	    /// Execute command procedure with the pointer to the own syntax object
 	    static
 	    esp_err_t invoke_impl(int argc, char* argv[]);
@@ -228,9 +258,6 @@ namespace arg
 
     };/* namespace arg::table */
 
-//    //extern
-//    template<>
-//    esp_err_t table::act<nullptr>::invoke(int argc, char* argv[]);
 
     ///< parsing the sended parameters
     template <std::size_t size>
@@ -239,257 +266,7 @@ namespace arg
     }; /* table::syntax<Args...>::parse() */
 
 
-
-
 }; /* namespace arg */
-
-namespace Arg
-{
-
-    namespace Rex
-    {
-	/// Flag for initializing struct arg_rex / Arg::rex: "none", empty flag
-	constexpr int None = 0;
-	/// Flag for initializing struct arg_rex / Arg::rex: ignoring case for matching
-	constexpr int ICase = ARG_REX_ICASE;
-
-    }; /* Rex */
-
-   /*
-    * The arg_hdr struct defines properties that are common to all arg_xxx structs.
-    * The argtable library requires each arg_xxx struct to have an arg_hdr
-    * struct as its first data member.
-    * The argtable library functions then use this data to identify the
-    * properties of the command line option, such as its option tags,
-    * datatype string, and glossary strings, and so on.
-    * Moreover, the arg_hdr struct contains pointers to custom functions that
-    * are provided by each arg_xxx struct which perform the tasks of parsing
-    * that particular arg_xxx arguments, performing post-parse checks, and
-    * reporting errors.
-    * These functions are private to the individual arg_xxx source code
-    * and are the pointer to them are initiliased by that arg_xxx struct's
-    * constructor function. The user could alter them after construction
-    * if desired, but the original intention is for them to be set by the
-    * constructor and left unaltered.
-    */
-    struct head: public arg_hdr
-    {
-	head& assign(const arg_hdr& hdr) {set(*this, hdr); return *this;};
-//	header& assign(const header& hdr) {set(*this, static_cast<const arg_hdr&>(hdr)); return *this;};
-	head& assign(const arg_hdr&& hdr) {set(*this, hdr); return *this;};
-//	header& assign(const header&& hdr) {set(*this, static_cast<arg_hdr&&>(hdr)); return *this;};
-
-	static void set(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
-	static void set(arg_hdr& dest, arg_hdr&& tsrc);		///< move values of temporary "tsrs" to the "dest"
-    }; /* struct Arg::head */
-
-
-
-    /// Abstract virtual class for store/pointing to specific Arg::table items
-    struct item
-    {
-	/// Get stored hdr field
-	virtual arg_hdr& hdr() = 0;
-	const   arg_hdr& hdr() const;
-	virtual item* clone() const = 0;	///< Clone object of the derived from the Arg::item type
-	virtual void *pure() = 0;		///< Return the converted this to the void*
-	virtual operator void*() = 0;		///< Converting item to a void*
-	/// Set stored hdr field
-	void hdr(const item& it) { hdr(it.hdr()); };
-	void hdr(const arg_hdr&);
-	void hdr(arg_hdr&&);
-	virtual ~item() {};
-
-    protected:
-//	static void set_hdr(arg_hdr& dest, const arg_hdr& src);	///< assign values of "srs" to "dest"
-//	static void set_hdr(arg_hdr& dest, arg_hdr&& tsrc);	///< move values of temporary "tsrs" to the "dest"
-    }; /* Arg::item */
-
-
-
-    // Any kind of specific argtable3 items
-    template <class kind>
-    struct seed: public item, public kind
-    {
-	/// copy constructor for long lifetime lvalue pointer
-	seed(const kind* arg) {
-	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [const arg_xxx&] obj: [%p] into [%p]", arg, this);
-	    assign(*arg); };
-	/// move constructor for temporary rvalue pointer to deallocable object
-	seed(kind* && arg): seed(arg) {
-	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [arg_xxx* &&] obj: [%p] into [%p]", arg, this);
-	    ESP_LOGI(__FUNCTION__, "Free the the [arg_xxx* &&] pointed object");
-	    free(arg);// };
-	    // xfree(arg);
-	    arg = /*NULL*/nullptr; };
-	/// copy constructor
-	seed(const seed& arg): seed(static_cast<const kind*>(&arg)) {
-	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the [const Arg::seed&] obj: [%p] into [%p]", &arg, this);
-	};
-	/// move constructor
-	seed(seed&& arg): seed(static_cast<kind* &&>(&arg)) {
-	    ESP_LOGI(__FUNCTION__, "Create Arg::seed object from the temporarily [Arg::seed&&] obj: [%p] into [%p]", &arg, this);
-	};
-	/// Get stored hdr field
-	arg_hdr& hdr() override { return kind::hdr; };
-	/// clone the Arg::end instance into allocated memory object
-	seed* clone() const override { return new seed(this); };
-	/// Return the converted this to the void*
-	void *pure() override ;//{ return reinterpret_cast<void*>(/*static_cast<kind*>(*/this/*)*/); };
-	/// Converting item to a void*
-	operator void*() override { return static_cast<kind*>(this);};
-	/// assignment the value from other item
-	seed& assign(const kind&);
-	seed& assign(kind* && parg) {
-	    ESP_LOGI(__FUNCTION__, "Assign the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
-	    assign(const_cast<const kind&>(*parg)); free(parg); return *this;};
-	seed& operator = (kind* &&parg) {
-	    ESP_LOGI(__FUNCTION__, "Operator = the temporary value [arg_xxx* &&] parg: [%p] to [%p]", parg, this);
-	    return assign(std::move(parg)); };
-	seed& operator = (const kind& otharg) {
-	    ESP_LOGI(__FUNCTION__, "Operator = the const value [const arg_xxx &] otharg [%p] to [%p]", &otharg, this);
-	    return assign(otharg); };
-//	seed& operator = (const seed& other)  { return assign(other); };
-
-    }; /* template class Arg::seed  */
-
-
-    using rem = seed<struct arg_rem>;
-    using lit = seed<struct arg_lit>;
-    using integer = seed<struct arg_int>;
-    using dbl = seed<struct arg_dbl>;
-    using str = seed<struct arg_str>;
-    using rex = seed<struct arg_rex>;
-    using file = seed<struct arg_file>;
-    using date = seed<struct arg_date>;
-    using end  = seed<struct arg_end>;
-
-
-
-    /// assignment the value from other item
-    template <> Arg::rem& Arg::rem::assign(const struct arg_rem& other);
-    template <> Arg::lit& Arg::lit::assign(const struct arg_lit& other);
-    template <> Arg::integer& Arg::integer::assign(const struct arg_int& other);
-    template <> Arg::dbl& Arg::dbl::assign(const struct arg_dbl& other);
-    template <> Arg::str& Arg::str::assign(const struct arg_str& other);
-    template <> Arg::rex& Arg::rex::assign(const struct arg_rex& other);
-    template <> Arg::file& Arg::file::assign(const struct arg_file& other);
-    template <> Arg::date& Arg::date::assign(const struct arg_date& other);
-    template <> Arg::end& Arg::end::assign(const struct arg_end& other);
-
-
-
-
-
-
-    struct cmd
-    {
-//	cmd(item* const);	///< Initializing the Arg::cmd with l-value, long lifetime pointer
-	cmd(item* &&);		///< Initializing the Arg::cmd with temporary lifetime pointer
-
-	template <class It>
-	cmd(It* && pitem);	///< Initializing the Arg::cmd with temporary lifetime pointer to allocated argtable3 struct
-
-	cmd(const cmd&);	///< Initializing the Arg::cmd with l-value, long lifetime ref
-	cmd(cmd&& );		///< Initializing the Arg::cmd with temporary lifetime - rvalue ref
-	~cmd() {delete arg;};
-
-	item* get() { return arg;};
-
-	cmd& assign(cmd&& other) { swap(other); return *this; };
-	cmd& assign(const cmd& other);
-	cmd& assign(item* &&otharg) { arg = otharg; return *this; };
-	cmd& assign(const item* otharg);
-
-//	cmd& operator = (cmd&& other) { return assign(std::move(other)); };
-//	cmd& operator = (const cmd& other) { return assign(other); };
-//	cmd& operator = (item* &&otharg) { return assign(std::move(otharg)); };
-//	cmd& operator = (const item* otharg) { return assign(otharg); };
-
-	template <typename T>
-	cmd& operator = (T&& other) { return assign(std::forward<T>(other)); };
-
-	/// swap the args
-	void swap(cmd&) noexcept;
-
-
-    protected:
-	item* arg = nullptr;
-    }; /* struct Arg::cmd */
-
-
-    /// Smart pointer to argtable3 items
-    class xcmd
-    {
-    public:
-	template <typename iT>
-	xcmd(iT* &it): held(it) {};
-
-	template <typename iT>
-	xcmd(iT* &&it): xcmd(it) { it = nullptr; };
-
-	/// Only move-constructors with all possible variants!!!
-	xcmd(xcmd &other): xcmd(std::move(other)) {};
-	xcmd(xcmd &&other): held(std::move(other.held)) { other.held = static_cast<struct arg_rem*>(nullptr); };
-
-	virtual ~xcmd() /*{arg_freetable( held.get(), 1);}*/;
-
-	void* get();
-
-	template <typename It>
-	xcmd& assign(It&& it);
-
-	template <typename It>
-	xcmd& operator =(It&& it) { return assign(it); }
-
-
-
-	std::variant<struct arg_rem*,
-		    struct arg_lit*,
-		    struct arg_int*,
-		    struct arg_dbl*,
-		    struct arg_str*,
-		    struct arg_rex*,
-		    struct arg_file*,
-		    struct arg_date*,
-		    struct arg_end*> held;
-    }; /* class xcmd */
-
-
-    using iterator = std::list<xcmd>::iterator;
-
-    // C++ wrapper for definition arctable functionality
-    class table
-    {
-    public:
-	table(int mxerrs = 20);	 ///< default constructor
-	~table(); ///< destructor
-
-	/// Add new item in argtable
-	iterator addcmd(xcmd&&);
-
-	template <typename It>
-	iterator add(It* &&it);
-
-	/// Get the syntax table as array to void* data
-	std::vector<void*>& syntax();
-
-    private:
-
-	bool dirty = true;	// Content of table is updated, data is dirty
-	std::vector<void*> data;// array of pinters to content of the syntaxes table
-
-    protected:
-
-	std::list<xcmd> stor;
-
-
-    }; /* table */
-
-
-
-}; /* namespace Arg */
-
 
 #endif // __ARGTABLE3_CPP__
 
