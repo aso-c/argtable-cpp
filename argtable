@@ -176,15 +176,15 @@ namespace arg
 
 	namespace context
 	{
-	    /// alias for esp console execution command w/context procedures
+	    /// alias for type of the esp console execution command w/context procedures
 	    using act_invoke_func_t = esp_console_cmd_func_with_context_t;
 
-	    /// Wrappwr for invoke command with context
+	    /// Holder for invoke command with context
 	    struct act_t
 	    {
 	    public:
 
-		act_invoke_func_t invoke;	// local object pointer to invoke() static implementation
+		act_invoke_func_t invoke;	/// local object pointer to invoke() static implementation
 
 	    protected:
 		template <auto esyntx>
@@ -211,19 +211,19 @@ namespace arg
 	    act_t(context::act_invoke_func_t ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
 
 	public:
-	    /// Generatin the singleton object for the derived class
+	    /// Generating of the singleton object for the derived class
 	    template <class act_class>
-	    static act_class& define() {
+	    static act_class& instance_impl() {
 		    static act_class single;
 
 		return single;
-	    }; /* template static arg::table::act_t::define() { */
+	    }; /* template static arg::table::act_t::instance_imp() { */
 
-	    decltype(*esyntx) &syntax = *esyntx;	// used syntax object with object of the class act instantation
+	    decltype(*esyntx) &syntax = *esyntx;/// used syntax object with object of the class act instantation
 
-	    act_invoke_func_t invoke;		// local object pointer to invoke() static implementation
+	    act_invoke_func_t invoke;		/// local object pointer to invoke() static implementation
 
-	    context::act_t context;		// class-holder for the invoke cmd-procedure with context
+	    context::act_t context;		/// class-holder for the invoke cmd-procedure with context
 
 	    /// Execute command procedure with the pointer to the own syntax object
 	    static
@@ -249,7 +249,7 @@ namespace arg
 
 	    act_invoke_func_t invoke;	// local object pointer to invoke() static implementation
 
-	    context::act_t context;		// class-holder for the invoke cmd-procedure with context
+	    context::act_t context;	// class-holder for the invoke cmd-procedure with context
 
 
 	    /// Execute command procedure with the pointer to the own syntax object
