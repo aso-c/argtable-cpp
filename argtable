@@ -42,7 +42,7 @@ namespace arg
 
 	namespace item
 	{
-	    using holder = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+	    using holder = std::variant<nullptr_t, struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
 
 	    /// array of the syntax items
 	    template <std::size_t size>
@@ -64,23 +64,23 @@ namespace arg
 
 	/// Syntax class definition
 	template <std::size_t sz>
-	class syntax
+	class syntax_t
 	{
 	public:
 
 	    template <typename... Args>
-	    syntax(Args&&... args/*, int n = 20*/):
+	    syntax_t(Args&&... args/*, int n = 20*/):
 		keep{reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
 		description{args..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Args)])}
 	    {};
 
 	    /// Copy constructor
-	    syntax(const syntax<sz>& other):
+	    syntax_t(const syntax_t<sz>& other):
 		keep{other.keep},
 		description{other.description}
 	    {};
 	    /// Move constructor
-	    syntax(syntax<sz>&& other) noexcept:
+	    syntax_t(syntax_t<sz>&& other) noexcept:
 		keep{std::move(other.keep)},
 		description{std::move(other.description)}
 	    {};
@@ -125,24 +125,24 @@ namespace arg
 	    constexpr static std::size_t size() { return sz; };	///< for diagnostic purposes
 
 	    /// copy assignment operator
-	    syntax& operator=(const syntax<sz>& other);
+	    syntax_t& operator=(const syntax_t<sz>& other);
 	    /// copy assignment operator
-	    syntax& operator=(syntax<sz>&& other);
+	    syntax_t& operator=(syntax_t<sz>&& other);
 
 	private:
 	    mutable int errcnt = 0;
 
-	}; /* struct arg::table::syntax */
+	}; /* struct arg::table::syntax_t */
 
 	template <typename ... Args>
-	    syntax(Args*...) -> syntax<sizeof...(Args)>;
+	    syntax_t(Args*...) -> syntax_t<sizeof...(Args)>;
 
 	template <std::size_t sz>
-	    syntax(syntax<sz>&) -> syntax<sz>;
+	    syntax_t(syntax_t<sz>&) -> syntax_t<sz>;
 
 	/// copy assignment operator inline implementation
 	template <std::size_t sz>
-	inline syntax<sz>& syntax<sz>::operator=(const syntax<sz>& other)
+	inline syntax_t<sz>& syntax_t<sz>::operator=(const syntax_t<sz>& other)
 	{
 	    keep = other.keep;
 	    description = other.description;
@@ -151,7 +151,7 @@ namespace arg
 
 	/// move assignment operator inline implementation
 	template <std::size_t sz>
-	inline syntax<sz>& syntax<sz>::operator=(syntax<sz>&& other)
+	inline syntax_t<sz>& syntax_t<sz>::operator=(syntax_t<sz>&& other)
 	{
 	    keep = std::move(other.keep);
 	    description = std::move(other.description);
@@ -168,57 +168,62 @@ namespace arg
 	}; /* struct arg::table::multisyntax */
 
 
-	/// Define class for command action, procedures & templates with the syntaxes
-	template <auto esyntx>
-	class act_t
-	{
-	public:
+	/// alias for esp console command execution procedures
+	using act_invoke_func_t = esp_console_cmd_func_t;
 
-	    //typedef esp_err_t (invoke_func_t)(int argc, char* argv[]);
-	    using invoke_func_t = esp_console_cmd_func_t;
+	template <auto esyntx>
+	class act_t;
+
+	namespace context
+	{
+	    /// alias for esp console execution command w/context procedures
+	    using act_invoke_func_t = esp_console_cmd_func_with_context_t;
 
 	    /// Wrappwr for invoke command with context
-	    class context_t
+	    struct act_t
 	    {
 	    public:
 
-		// typedef esp_err_t (invoke_func_t)(void* context, int argc, char* argv[]);
-		using invoke_func_t = esp_console_cmd_func_with_context_t;
-
-		invoke_func_t /***/invoke;	// local object pointer to invoke() static implementation
+		act_invoke_func_t invoke;	// local object pointer to invoke() static implementation
 
 	    protected:
-		context_t(invoke_func_t/***/ ext_invoke = invoke_impl): invoke(ext_invoke) {};
-		friend class act_t;
+		template <auto esyntx>
+		friend class table::act_t;
+
+		act_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
 
 		/// Execute command procedure with the pointer to the own syntax object
 		static
 		esp_err_t invoke_impl(void* context, int argc, char* argv[]) { return ESP_OK;  };
 
+	    }; /* struct arg::table::context::act_t */
 
-	    }; /* class arg::table::act_t::context */
+	}; /* namespace arg::table::context */
+
+	/// Define class for command action, procedures & templates with the syntaxes
+	template <auto esyntx>
+	class act_t
+	{
 
 	protected:
 	    /// constructor
-	    act_t(invoke_func_t/***/ ext_invoke = invoke_impl): invoke(ext_invoke) {};
-	    act_t(context_t::invoke_func_t/***/ ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
+	    act_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
+	    act_t(context::act_invoke_func_t ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
 
 	public:
 	    /// Generatin the singleton object for the derived class
 	    template <class act_class>
-	    static act_class& instance_impl() {
+	    static act_class& define() {
 		    static act_class single;
 
 		return single;
-	    }; /* template static arg::table::act_t::instance_impl() { */
-
-	    //using instance = instance_impl<act>;
+	    }; /* template static arg::table::act_t::define() { */
 
 	    decltype(*esyntx) &syntax = *esyntx;	// used syntax object with object of the class act instantation
 
-	    invoke_func_t /***/invoke;	// local object pointer to invoke() static implementation
+	    act_invoke_func_t invoke;		// local object pointer to invoke() static implementation
 
-	    context_t context;		// class-holder for the invoke cmd-procedure with context
+	    context::act_t context;		// class-holder for the invoke cmd-procedure with context
 
 	    /// Execute command procedure with the pointer to the own syntax object
 	    static
@@ -242,9 +247,9 @@ namespace arg
 
 	    zero_syntax_stub syntax;	///< stub for the "syntax" field of the act_t<nullptr> specialization
 
-//	    invoke_func_t invoke;	// local object pointer to invoke() static implementation
+	    act_invoke_func_t invoke;	// local object pointer to invoke() static implementation
 
-//	    context_t context;		// class-holder for the invoke cmd-procedure with context
+	    context::act_t context;		// class-holder for the invoke cmd-procedure with context
 
 
 	    /// Execute command procedure with the pointer to the own syntax object
@@ -261,9 +266,9 @@ namespace arg
 
     ///< parsing the sended parameters
     template <std::size_t size>
-    inline int table::syntax<size>::parse(int argc, char* argv[]) const {
+    inline int table::syntax_t<size>::parse(int argc, char* argv[]) const {
 	return (errcnt = arg_parse(argc, argv, const_cast<void**>(keep.data())));
-    }; /* table::syntax<Args...>::parse() */
+    }; /* table::syntax_t<Args...>::parse() */
 
 
 }; /* namespace arg */
