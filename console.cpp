@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.5.3
+ * @version 0.6.3
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 22.01.2025
+ *	    Updated: 30.01.2025
  */
 
 #if 0
@@ -51,7 +51,7 @@ namespace esp
     namespace console
     {
 	/// constructror for command execute w/o context
-	cmd::cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
+	cmd_complex::cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
 			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /* = global_lambda*/,
 			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
 			const char /*.help*/ help_str[] /* = nullptr*/ /*"General Bluetooth command"*/,
@@ -71,7 +71,7 @@ namespace esp
 	{};
 
 	/// constructor for command execute implementation with context
-	cmd::cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
+	cmd_complex::cmd_complex(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
 //			esp_console_cmd_func_t /*.func*/ exe /* = global_lambda*/,
 			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ exec_wcontext /*= nullptr*/,
 			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
@@ -103,59 +103,10 @@ namespace esp
 	//}); /* bt_cmd */
 
 	/// register the current command
-	esp_err_t cmd::enreg() const
+	esp_err_t cmd_complex::enreg() const
 	{
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
-
-
-//-[ class cmd_simple (only for a dev time ]---------------------------------------------------------------------------
-
-#if 0
-	/// constructror for command execute w/o context
-	cmd_simple::cmd_simple(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
-			const char help_str[], const char hint_str[]):
-		esp_console_cmd_t {
-			.command = name,
-		        .help = help_str,
-		        .hint = hint_str,
-		        .func = exe,
-			.argtable = syntaxtable,
-			.func_w_context = nullptr,
-			.context = nullptr
-		}
-	{};
-
-	/// constructor for command execute implementation with context
-	cmd_simple::cmd_simple(char name[], esp_console_cmd_func_with_context_t exec,
-			void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
-		esp_console_cmd_t {
-			.command = name,
-		        .help = help_str,
-		        .hint = hint_str,
-		        .func = nullptr,
-			.argtable = syntaxtable,
-			.func_w_context = exec,
-			.context = cntxt
-		}
-	{};
-
-	//const esp::console::cmd bt_cmd ({
-	//	.command = "bt"/* | bluetooth"*/,
-	//        .help = "General Bluetooth command",
-	//        .hint = nullptr/*"Bluetooth command exec"*/,
-	//        .func = global_lambda,
-	//	.argtable = bt::syntax,
-	//	.func_w_context = nullptr,
-	//	.context = nullptr
-	//}); /* bt_cmd */
-
-	/// register the current command
-	esp_err_t cmd_simple::enreg() const
-	{
-	    return esp_console_cmd_register(this);
-	}; /* esp::console::cmd::enreg() */
-#endif
 
     }; /* namespace esp::console */
 

@@ -6,7 +6,7 @@
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
  *	      Updated 30.01.2025
- *	@version v.0.6.2
+ *	@version v.0.6.3
  */
 
 
@@ -172,7 +172,7 @@ namespace arg
 	using act_invoke_func_t = esp_console_cmd_func_t;
 
 	template <auto esyntx>
-	class act_t;
+	class act_cmplx_t;
 
 	namespace context
 	{
@@ -188,7 +188,7 @@ namespace arg
 
 	    protected:
 		template <auto esyntx>
-		friend class table::act_t;
+		friend class table::act_cmplx_t;
 
 		act_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
 
@@ -202,13 +202,13 @@ namespace arg
 
 	/// Define class for command action, procedures & templates with the syntaxes
 	template <auto extrasyntx>
-	class act_t
+	class act_cmplx_t
 	{
 
 	protected:
 	    /// constructor
-	    act_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
-	    act_t(context::act_invoke_func_t ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
+	    act_cmplx_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
+	    act_cmplx_t(context::act_invoke_func_t ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
 
 	public:
 	    /// Generating of the singleton object for the derived class
@@ -238,7 +238,7 @@ namespace arg
 
 	/// Specialization for the nullptr parameter
 	template <>
-	class act_t<nullptr>
+	class act_cmplx_t<nullptr>
 	{
 	    /// stub type for zero syntax act_t specialization
 	    struct zero_syntax_stub
