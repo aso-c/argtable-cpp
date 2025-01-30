@@ -108,6 +108,55 @@ namespace esp
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
 
+
+//-[ class cmd_simple (only for a dev time ]---------------------------------------------------------------------------
+
+#if 0
+	/// constructror for command execute w/o context
+	cmd_simple::cmd_simple(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
+			const char help_str[], const char hint_str[]):
+		esp_console_cmd_t {
+			.command = name,
+		        .help = help_str,
+		        .hint = hint_str,
+		        .func = exe,
+			.argtable = syntaxtable,
+			.func_w_context = nullptr,
+			.context = nullptr
+		}
+	{};
+
+	/// constructor for command execute implementation with context
+	cmd_simple::cmd_simple(char name[], esp_console_cmd_func_with_context_t exec,
+			void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
+		esp_console_cmd_t {
+			.command = name,
+		        .help = help_str,
+		        .hint = hint_str,
+		        .func = nullptr,
+			.argtable = syntaxtable,
+			.func_w_context = exec,
+			.context = cntxt
+		}
+	{};
+
+	//const esp::console::cmd bt_cmd ({
+	//	.command = "bt"/* | bluetooth"*/,
+	//        .help = "General Bluetooth command",
+	//        .hint = nullptr/*"Bluetooth command exec"*/,
+	//        .func = global_lambda,
+	//	.argtable = bt::syntax,
+	//	.func_w_context = nullptr,
+	//	.context = nullptr
+	//}); /* bt_cmd */
+
+	/// register the current command
+	esp_err_t cmd_simple::enreg() const
+	{
+	    return esp_console_cmd_register(this);
+	}; /* esp::console::cmd::enreg() */
+#endif
+
     }; /* namespace esp::console */
 
 }; /* namespace esp */

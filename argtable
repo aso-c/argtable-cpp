@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 27.01.2025
- *	@version v.0.6.1
+ *	      Updated 30.01.2025
+ *	@version v.0.6.2
  */
 
 
@@ -201,7 +201,7 @@ namespace arg
 	}; /* namespace arg::table::context */
 
 	/// Define class for command action, procedures & templates with the syntaxes
-	template <auto esyntx>
+	template <auto extrasyntx>
 	class act_t
 	{
 
@@ -219,7 +219,8 @@ namespace arg
 		return single;
 	    }; /* template static arg::table::act_t::instance_imp() { */
 
-	    decltype(*esyntx) &syntax = *esyntx;/// used syntax object with object of the class act instantation
+	    decltype(*extrasyntx) &syntax = *extrasyntx;/// used syntax object with object of the class act instantation
+	    constexpr decltype(*extrasyntx) static &syntax_st = *extrasyntx;/// used syntax object with object of the class act instantation
 
 	    act_invoke_func_t invoke;		/// local object pointer to invoke() static implementation
 
