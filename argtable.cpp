@@ -6,7 +6,7 @@
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
  *	      Updated 30.01.2025
- *	@version 0.6.3
+ *	@version 0.6.4
  */
 
 

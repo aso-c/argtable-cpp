@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 30.01.2025
- *	@version v.0.6.3
+ *	      Updated 03.02.2025
+ *	@version v.0.6.4
  */
 
 
@@ -171,7 +171,7 @@ namespace arg
 	/// alias for esp console command execution procedures
 	using act_invoke_func_t = esp_console_cmd_func_t;
 
-	template <auto esyntx>
+	template <auto extrasyntx>
 	class act_cmplx_t;
 
 	namespace context
@@ -260,7 +260,38 @@ namespace arg
 	    /// Run the Help procedure with the pointer to the own syntax object
 	    static
 	    esp_err_t help_impl(int argc, char* argv[]);
-	}; /* class arg::table::act<nullptr> */
+	}; /* class arg::table::act_cmplx_t<nullptr> */
+
+
+	/// Define base template struct for command action, procedures & templates with the syntaxes
+	template <auto Syntax>
+	struct act_t
+	{
+	    using invoke_func_t = esp_console_cmd_func_with_context_t;
+
+	    constexpr static decltype(*Syntax) &syntax = *Syntax;
+
+	    /// Execute command procedure for the pointer to own syntax object
+	    static
+	    esp_err_t invoke(int argc, char* argv[]);
+
+	    /// Run the Help procedure for the pointer to own syntax object
+	    static
+	    esp_err_t help(int argc, char* argv[]);
+
+	    struct contexted
+	    {
+		/// alias for type of the esp console execution command w/context procedures
+		using act_invoke_func_t = esp_console_cmd_func_with_context_t;
+
+		/// Execute command procedure with the pointer to the own syntax object
+		static
+		esp_err_t invoke_impl(void* context, int argc, char* argv[]);
+
+	    }; /* template struct arg::table::act_t::contexted */
+
+	}; /* template struct arg::table::act_t */
+
 
     };/* namespace arg::table */
 

@@ -15,7 +15,7 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.3
+ * @version 0.6.4
  * @date Created on: 25 дек. 2024 г.
  *	    Updated: 30.01.2025
  */
