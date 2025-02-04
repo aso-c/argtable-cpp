@@ -15,7 +15,7 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.4
+ * @version 0.6.5
  * @date Created on: 25 дек. 2024 г.
  *	    Updated: 30.01.2025
  */
@@ -50,6 +50,7 @@ namespace esp
 {
     namespace console
     {
+#if 0
 	/// constructror for command execute w/o context
 	cmd_complex::cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
 			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /* = global_lambda*/,
@@ -107,6 +108,7 @@ namespace esp
 	{
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
+#endif
 
     }; /* namespace esp::console */
 

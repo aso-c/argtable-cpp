@@ -15,7 +15,7 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.4
+ * @version 0.6.5
  * @date Created on: 25 дек. 2024 г.
  *	    Updated: 03.02.2025
  */
@@ -43,101 +43,6 @@ namespace esp
 {
     namespace console
     {
-	struct cmd_complex: public esp_console_cmd_t
-	{
-
-	    cmd_complex(const char name[], esp_console_cmd_func_t exe, void* syntaxtable = nullptr,
-			const char help_str[] = nullptr, const char hint_str[] = nullptr);
-	    cmd_complex(char name[], esp_console_cmd_func_with_context_t context_exe, void* syntaxtable = nullptr,
-			char help_str[] = nullptr, char hint_str[] = nullptr, void* cntxt = nullptr);
-
-	    template <class Cmd_act>
-	    cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			//esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-			Cmd_act&& /*.argtable & .func*/ act /*bt::syntax*/,
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-							):
-		cmd_complex(name, act.invoke, act.syntax.keep.data(), help_str, hint_str)
-		{};
-
-	    template <class Act_w_cntxt>
-	    cmd_complex(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//	//		esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-//			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-			Act_w_cntxt&& /*.argtable & .func_w_context & .context*/ cntxtact /*bt::syntax*/,
-			void* /*.context*/ context,
-			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-							):
-		cmd_complex(name, cntxtact.invoke, cntxtact.syntax.keep.data(), help_str, hint_str)
-		{};
-
-
-	    //--- Not functional!!!
-	    template <class Act>
-	    cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			//esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-			/*Cmd_act&& *//*.argtable & .func*//* act *//*bt::syntax*//*,*/
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-							):
-		cmd_complex(name, Act::invoke_impl, Act::syntax_st.keep.data(), help_str, hint_str)
-		{};
-
-	    //--- Not Functional!!!
-	    template <class Act>
-	    cmd_complex(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//	//		esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-//			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-			/*Act_w_cntxt&& *//*.argtable & .func_w_context & .context*/ /*cntxtact*/ /*bt::syntax*//*,*/
-			void* /*.context*/ context,
-			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-							):
-		cmd_complex(name, Act::context::invoke, Act::syntax_st.keep.data(), help_str, hint_str)
-		{};
-
-
-	    template <class Syntax>
-	    cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-							):
-		cmd_complex(name, exe, syntax.keep.data(), help_str, hint_str)
-		{};
-
-	    template <class Syntax>
-	    cmd_complex(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//			esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
-			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
-			void* /*.context*/ cntxt = nullptr
-							):
-		cmd_complex(name, context_exe, syntax.keep.data(), help_str, hint_str)
-		{};
-
-
-	    esp_err_t enreg() const;	///< register current command
-
-	    int errors() const { return errcnt; };
-
-	private:
-	    mutable int errcnt = 0;
-
-	}; /* struct esp::console::cmd_complex */
-
-
 	template <class Act>
 	struct cmd: public esp_console_cmd_t
 	{

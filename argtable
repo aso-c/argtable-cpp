@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 03.02.2025
- *	@version v.0.6.4
+ *	      Updated 04.02.2025
+ *	@version v.0.6.5
  */
 
 
@@ -42,7 +42,7 @@ namespace arg
 
 	namespace item
 	{
-	    using holder = std::variant<nullptr_t, struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+	    using holder = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
 
 	    /// array of the syntax items
 	    template <std::size_t size>
@@ -62,25 +62,39 @@ namespace arg
 	    }; /* class arg::table::item::router */
 	}; /* namespace arg::table::item */
 
+	namespace syntax
+	{
+
+	    template <typename Item>
+	    concept Entities = std::same_as<Item, struct arg_rem* > ||
+				std::same_as<Item, arg_lit*> ||
+				std::same_as<Item, arg_int*> ||
+				std::same_as<Item, arg_dbl*> ||
+				std::same_as<Item, arg_str*> ||
+				std::same_as<Item, arg_rex*> ||
+				std::same_as<Item, arg_file*>||
+				std::same_as<Item, arg_date*>;
+
+
 	/// Syntax class definition
 	template <std::size_t sz>
-	class syntax_t
+	class def
 	{
 	public:
 
-	    template <typename... Args>
-	    syntax_t(Args&&... args/*, int n = 20*/):
-		keep{reinterpret_cast<void*>(args)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
-		description{args..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Args)])}
+	    template <Entities... Items>
+	    def(Items&&... items/*, int n = 20*/):
+		keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
+		description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
 	    {};
 
 	    /// Copy constructor
-	    syntax_t(const syntax_t<sz>& other):
+	    def(const def<sz>& other):
 		keep{other.keep},
 		description{other.description}
 	    {};
 	    /// Move constructor
-	    syntax_t(syntax_t<sz>&& other) noexcept:
+	    def(def<sz>&& other) noexcept:
 		keep{std::move(other.keep)},
 		description{std::move(other.description)}
 	    {};
@@ -125,38 +139,39 @@ namespace arg
 	    constexpr static std::size_t size() { return sz; };	///< for diagnostic purposes
 
 	    /// copy assignment operator
-	    syntax_t& operator=(const syntax_t<sz>& other);
+	    def& operator=(const def<sz>& other);
 	    /// copy assignment operator
-	    syntax_t& operator=(syntax_t<sz>&& other);
+	    def& operator=(def<sz>&& other);
 
 	private:
 	    mutable int errcnt = 0;
 
-	}; /* struct arg::table::syntax_t */
+	}; /* template struct arg::table::syntax::def */
 
 	template <typename ... Args>
-	    syntax_t(Args*...) -> syntax_t<sizeof...(Args)>;
+	    def(Args*...) -> def<sizeof...(Args)>;
 
 	template <std::size_t sz>
-	    syntax_t(syntax_t<sz>&) -> syntax_t<sz>;
+	    def(def<sz>&) -> def<sz>;
+	}; /* namespace arg::table::syntax */
 
 	/// copy assignment operator inline implementation
 	template <std::size_t sz>
-	inline syntax_t<sz>& syntax_t<sz>::operator=(const syntax_t<sz>& other)
+	inline syntax::def<sz>& syntax::def<sz>::operator=(const def<sz>& other)
 	{
 	    keep = other.keep;
 	    description = other.description;
 	    return *this;
-	}; /* operator=() */
+	}; /* template syntax::def& syntax::def::operator=(const def&) */
 
 	/// move assignment operator inline implementation
 	template <std::size_t sz>
-	inline syntax_t<sz>& syntax_t<sz>::operator=(syntax_t<sz>&& other)
+	inline syntax::def<sz>& syntax::def<sz>::operator=(def<sz>&& other)
 	{
 	    keep = std::move(other.keep);
 	    description = std::move(other.description);
 	    return *this;
-	}; /* operator=() */
+	}; /* template syntax::def& syntax::def::operator=(def&&) */
 
 
 
@@ -298,7 +313,7 @@ namespace arg
 
     ///< parsing the sended parameters
     template <std::size_t size>
-    inline int table::syntax_t<size>::parse(int argc, char* argv[]) const {
+    inline int table::syntax::def<size>::parse(int argc, char* argv[]) const {
 	return (errcnt = arg_parse(argc, argv, const_cast<void**>(keep.data())));
     }; /* table::syntax_t<Args...>::parse() */
 
