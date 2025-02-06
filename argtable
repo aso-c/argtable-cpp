@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 04.02.2025
- *	@version v.0.6.5
+ *	      Updated 06.02.2025
+ *	@version v.0.6.6
  */
 
 
@@ -99,6 +99,9 @@ namespace arg
 		description{std::move(other.description)}
 	    {};
 
+	    constexpr static std::size_t size() noexcept { return sz; };	///< for diagnostic purposes
+
+
 	    item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synatax item declarations
 
 	    item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
@@ -135,8 +138,6 @@ namespace arg
 	    void error(FILE* fp, const char pname[]) const {
 		arg_print_errors(fp, std::get<struct arg_end*>(description.back()), pname);
 	    };
-
-	    constexpr static std::size_t size() { return sz; };	///< for diagnostic purposes
 
 	    /// copy assignment operator
 	    def& operator=(const def<sz>& other);
@@ -278,13 +279,17 @@ namespace arg
 	}; /* class arg::table::act_cmplx_t<nullptr> */
 
 
+	/// Constarains for a template struct arg::table::act_t
+	template <typename TSyntax>
+	concept Syntaxes = std::same_as<TSyntax, syntax::def<TSyntax::size()>>;
+
 	/// Define base template struct for command action, procedures & templates with the syntaxes
-	template <auto Syntax>
+	template <Syntaxes auto &Syntax>
 	struct act_t
 	{
 	    using invoke_func_t = esp_console_cmd_func_with_context_t;
 
-	    constexpr static decltype(*Syntax) &syntax = *Syntax;
+	    static constexpr syntax::def<Syntax.size()> &syntax = Syntax;
 
 	    /// Execute command procedure for the pointer to own syntax object
 	    static
@@ -301,12 +306,39 @@ namespace arg
 
 		/// Execute command procedure with the pointer to the own syntax object
 		static
-		esp_err_t invoke_impl(void* context, int argc, char* argv[]);
+		esp_err_t invoke(void* context, int argc, char* argv[]);
 
 	    }; /* template struct arg::table::act_t::contexted */
 
 	}; /* template struct arg::table::act_t */
 
+	/// "Zero-syntax" specialization of the base for the command action/procedures
+	class act_zero
+	{
+	    /// stub type for zero syntax act_t specialization
+	    struct zero_syntax_stub
+	    {
+		void* data() { return nullptr; };
+	    }; /* act_t<nullptr>::zero_syntax_stub */
+
+
+	    /// Execute command procedure with the pointer to the own syntax object
+	    static
+	    esp_err_t invoke(int argc, char* argv[]);
+
+	    /// Run the Help procedure with the pointer to the own syntax object
+	    static
+	    esp_err_t help(int argc, char* argv[]);
+
+	    struct contexted
+	    {
+		/// Execute command procedure with the pointer to the own syntax object
+		static
+		esp_err_t invoke(void* context, int argc, char* argv[]);
+
+	    }; /* struct arg::table::act_zero::contexted */
+
+	}; /* struct arg::table::act_zero */
 
     };/* namespace arg::table */
 
