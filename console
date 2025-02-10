@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.5
+ * @version 0.6.7
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 03.02.2025
+ *	    Updated: 10.02.2025
  */
 
 
@@ -43,7 +43,28 @@ namespace esp
 {
     namespace console
     {
+
 	template <class Act>
+	concept Act_nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
+	{
+	    ret = Act::invoke(argc, argv);
+	    buf = Act::syntax.keep.data();
+	}; /* concept Act_nocontext */
+
+	template <class Act>
+	concept Act_contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
+	{
+	    typename Act::contexted;
+	    ret = Act::contexted::invoke(context, argc, argv);
+	    buf = Act::syntax.keep.data();
+	}; /* concept Act_contexted */
+
+	template <class Act>
+	concept Act_def = Act_nocontext<Act> || Act_contexted<Act>;
+
+
+//	template <class Act>
+	template <Act_def Act>
 	struct cmd: public esp_console_cmd_t
 	{
 	    // constructing cmd object for command execution w/o cintext
@@ -111,7 +132,8 @@ namespace esp
 
 
 	/// constructror for command execute w/o context
-	template <class Act>
+//	template <class Act>
+	template <Act_def Act>
 	inline cmd<Act>::cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
 			const char help_str[], const char hint_str[]):
 		esp_console_cmd_t {
@@ -126,7 +148,8 @@ namespace esp
 	{};
 
 	/// constructor for command execute implementation with context
-	template <class Act>
+//	template <class Act>
+	template <Act_def Act>
 	inline cmd<Act>::cmd(char name[], esp_console_cmd_func_with_context_t exec,
 			void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
 		esp_console_cmd_t {
@@ -151,7 +174,8 @@ namespace esp
 	//}); /* bt_cmd */
 
 	/// register the current command
-	template <class Act>
+//	template <class Act>
+	template <Act_def Act>
 	esp_err_t inline cmd<Act>::enreg() const
 	{
 	    return esp_console_cmd_register(this);
