@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 06.02.2025
- *	@version v.0.6.6
+ *	      Updated 11.02.2025
+ *	@version v.0.6.8
  */
 
 
@@ -183,13 +183,14 @@ namespace arg
 
 	}; /* struct arg::table::multisyntax */
 
-
+#if 0
 	/// alias for esp console command execution procedures
 	using act_invoke_func_t = esp_console_cmd_func_t;
 
 	template <auto extrasyntx>
 	class act_cmplx_t;
-
+#endif
+#if 0
 	namespace context
 	{
 	    /// alias for type of the esp console execution command w/context procedures
@@ -215,7 +216,8 @@ namespace arg
 	    }; /* struct arg::table::context::act_t */
 
 	}; /* namespace arg::table::context */
-
+#endif
+#if 0
 	/// Define class for command action, procedures & templates with the syntaxes
 	template <auto extrasyntx>
 	class act_cmplx_t
@@ -251,7 +253,8 @@ namespace arg
 	    esp_err_t help_impl(int argc, char* argv[]);
 
 	}; /* class arg::table::act_t */
-
+#endif
+#if 0
 	/// Specialization for the nullptr parameter
 	template <>
 	class act_cmplx_t<nullptr>
@@ -277,6 +280,7 @@ namespace arg
 	    static
 	    esp_err_t help_impl(int argc, char* argv[]);
 	}; /* class arg::table::act_cmplx_t<nullptr> */
+#endif
 
 
 	/// Constrains template concept arg::table::Syntaxes

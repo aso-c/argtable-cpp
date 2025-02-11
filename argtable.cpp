@@ -33,6 +33,7 @@
 namespace arg
 {
 
+#if 0
     /// Stub with empty command execution body
     //template <nullptr>
     esp_err_t arg::table::act_cmplx_t<nullptr>::invoke_impl(int argc, char* argv[]) {
@@ -45,6 +46,7 @@ namespace arg
     esp_err_t table::act_cmplx_t<nullptr>::help_impl(int argc, char* argv[]) {
 	return ESP_OK;
     }; /* act::invoke<nullptr>() */
+#endif
 
 }; /* namespace arg */
 

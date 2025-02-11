@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.7
+ * @version 0.6.8
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 10.02.2025
+ *	    Updated: 11.02.2025
  */
 
 
@@ -44,27 +44,43 @@ namespace esp
     namespace console
     {
 
-	template <class Act>
-	concept Act_nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
+	namespace Act
 	{
-	    ret = Act::invoke(argc, argv);
-	    buf = Act::syntax.keep.data();
+//	template <class Act>
+	template <class Action>
+//	concept Act_nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
+	concept nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
+	{
+	    ret = Action::invoke(argc, argv);
+//	    buf = Action::syntax.keep.data();
 	}; /* concept Act_nocontext */
 
-	template <class Act>
-	concept Act_contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
+//	template <class Act>
+	template <class Action>
+//	concept Act_contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
+	concept contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
 	{
-	    typename Act::contexted;
-	    ret = Act::contexted::invoke(context, argc, argv);
-	    buf = Act::syntax.keep.data();
+	    typename Action::contexted;
+	    ret = Action::contexted::invoke(context, argc, argv);
+//	    buf = Action::syntax.keep.data();
 	}; /* concept Act_contexted */
 
-	template <class Act>
-	concept Act_def = Act_nocontext<Act> || Act_contexted<Act>;
-
+		template <class Action>
+		concept syntaxed = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
+		{
+		    buf = Action::syntax.keep.data();
+		}; /* concept Act_contexted */
 
 //	template <class Act>
-	template <Act_def Act>
+	template <class Action>
+//	concept Act_def = Act_nocontext<Act> || Act_contexted<Act>;
+	concept define = (nocontext<Action> || contexted<Action>) && syntaxed<Action>;
+
+	}; /* namespace esp::console::Act */
+
+
+//	template <Act_def Act>
+	template <Act::define Action>
 	struct cmd: public esp_console_cmd_t
 	{
 	    // constructing cmd object for command execution w/o cintext
@@ -76,7 +92,7 @@ namespace esp
 //			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
 //			void* /*.context*/ cntxt = nullptr
 							):
-		cmd(name, Act::invoke/*_impl*/, Act::syntax/*_st*/, help_str, hint_str)
+		cmd(name, Action::invoke/*_impl*/, Action::syntax/*_st*/, help_str, hint_str)
 		{};
 
 	    // constructing cmd object for command execution w/o cintext
@@ -88,11 +104,12 @@ namespace esp
 			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
 			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
 							):
-		cmd(name, Act::contexted::invoke, Act::syntax/*_st*/, help_str, hint_str)
+		cmd(name, Action::contexted::invoke, Action::syntax/*_st*/, help_str, hint_str)
 		{};
 
 
-	    template <class Syntax>
+//	    template <class Syntax>
+	    template <Act::syntaxed Syntax>
 	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
 			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
 			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
@@ -104,7 +121,8 @@ namespace esp
 		cmd(name, exe, syntax.keep.data(), help_str, hint_str)
 		{};
 
-	    template <class Syntax>
+//	    template <class Syntax>
+	    template <Act::syntaxed Syntax>
 	    cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
 //			esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
 			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
@@ -132,9 +150,9 @@ namespace esp
 
 
 	/// constructror for command execute w/o context
-//	template <class Act>
-	template <Act_def Act>
-	inline cmd<Act>::cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
+//	template <Act_def Act>
+	template <Act::define Action>
+	inline cmd<Action>::cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
 			const char help_str[], const char hint_str[]):
 		esp_console_cmd_t {
 			.command = name,
@@ -148,9 +166,9 @@ namespace esp
 	{};
 
 	/// constructor for command execute implementation with context
-//	template <class Act>
-	template <Act_def Act>
-	inline cmd<Act>::cmd(char name[], esp_console_cmd_func_with_context_t exec,
+//	template <Act_def Act>
+	template <Act::define Action>
+	inline cmd<Action>::cmd(char name[], esp_console_cmd_func_with_context_t exec,
 			void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
 		esp_console_cmd_t {
 			.command = name,
@@ -174,8 +192,8 @@ namespace esp
 	//}); /* bt_cmd */
 
 	/// register the current command
-//	template <class Act>
-	template <Act_def Act>
+//	template <Act_def Act>
+	template <Act::define Act>
 	esp_err_t inline cmd<Act>::enreg() const
 	{
 	    return esp_console_cmd_register(this);
