@@ -15,15 +15,10 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.5
+ * @version 0.6.9
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 30.01.2025
+ *	    Updated: 11.02.2025
  */
-
-#if 0
-#include <errno.h>
-#include <stdlib.h>
-#endif	// if 0
 
 //#include <stdint.h>
 //#include <string.h>
@@ -50,16 +45,10 @@ namespace esp
 {
     namespace console
     {
-#if 0
+
 	/// constructror for command execute w/o context
-	cmd_complex::cmd_complex(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /* = global_lambda*/,
-			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
-			const char /*.help*/ help_str[] /* = nullptr*/ /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] /* = nullptr*/ /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-	):
+	cmd::cmd(const char name[], arg::table::act::invoke_func exe, void* syntaxtable,
+			const char help_str[], const char hint_str[]):
 		esp_console_cmd_t {
 			.command = name,
 		        .help = help_str,
@@ -68,29 +57,21 @@ namespace esp
 			.argtable = syntaxtable,
 			.func_w_context = nullptr,
 			.context = nullptr
-	}
+		}
 	{};
 
 	/// constructor for command execute implementation with context
-	cmd_complex::cmd_complex(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//			esp_console_cmd_func_t /*.func*/ exe /* = global_lambda*/,
-			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ exec_wcontext /*= nullptr*/,
-			void* /*.argtable*/ syntaxtable /* = nullptr*/ /*bt::syntax*/,
-			char /*.help*/ help_str[] /* = nullptr*/ /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] /* = nullptr*/ /*"Bluetooth command exec"*/,
-			void* /*.context*/ cntxt /* = nullptr*/
-	):
-//	cmd::cmd(char name[], esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ context_exec,
-//		void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
+	cmd::cmd(char name[], arg::table::act::contexted::invoke_func exec,
+			void* syntaxtable, const char help_str[], const char hint_str[], void* cntxt):
 		esp_console_cmd_t {
 			.command = name,
 		        .help = help_str,
 		        .hint = hint_str,
 		        .func = nullptr,
 			.argtable = syntaxtable,
-			.func_w_context = exec_wcontext,
+			.func_w_context = exec,
 			.context = cntxt
-	}
+		}
 	{};
 
 	//const esp::console::cmd bt_cmd ({
@@ -104,11 +85,10 @@ namespace esp
 	//}); /* bt_cmd */
 
 	/// register the current command
-	esp_err_t cmd_complex::enreg() const
+	esp_err_t cmd::enreg() const
 	{
 	    return esp_console_cmd_register(this);
 	}; /* esp::console::cmd::enreg() */
-#endif
 
     }; /* namespace esp::console */
 

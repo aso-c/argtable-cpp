@@ -15,7 +15,7 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.8
+ * @version 0.6.9
  * @date Created on: 25 дек. 2024 г.
  *	    Updated: 11.02.2025
  */
@@ -44,74 +44,41 @@ namespace esp
     namespace console
     {
 
-	namespace Act
+	namespace Action
 	{
-//	template <class Act>
-	template <class Action>
-//	concept Act_nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
-	concept nocontext = requires(int argc, char* argv[], esp_err_t ret, void* buf)
-	{
-	    ret = Action::invoke(argc, argv);
-//	    buf = Action::syntax.keep.data();
-	}; /* concept Act_nocontext */
+	    template <class Act>
+	    concept nocontext = requires(int argc, char* argv[], esp_err_t ret)
+	    {
+		ret = Act::invoke(argc, argv);
+	    }; /* concept esp::console::Action::nocontext */
 
-//	template <class Act>
-	template <class Action>
-//	concept Act_contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
-	concept contexted = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
-	{
-	    typename Action::contexted;
-	    ret = Action::contexted::invoke(context, argc, argv);
-//	    buf = Action::syntax.keep.data();
-	}; /* concept Act_contexted */
+	    template <class Act>
+	    concept contexted = requires(void* context, int argc, char* argv[], esp_err_t ret)
+	    {
+		typename Act::contexted;
+		ret = Act::contexted::invoke(context, argc, argv);
+	    }; /* concept esp::console::Action::contexted */
 
-		template <class Action>
-		concept syntaxed = requires(void* context, int argc, char* argv[], esp_err_t ret, void* buf)
-		{
-		    buf = Action::syntax.keep.data();
-		}; /* concept Act_contexted */
-
-//	template <class Act>
-	template <class Action>
-//	concept Act_def = Act_nocontext<Act> || Act_contexted<Act>;
-	concept define = (nocontext<Action> || contexted<Action>) && syntaxed<Action>;
-
-	}; /* namespace esp::console::Act */
+	    template <class Syntax>
+	    concept syntable = requires(Syntax syntax, void* buf)
+	    {
+		buf = /*Act::*/syntax.keep.data();
+	    }; /* concept esp::console::Action::syntable */
 
 
-//	template <Act_def Act>
-	template <Act::define Action>
+	    template <class Act>
+	    concept def = (nocontext<Act> || contexted<Act>) && syntable<decltype(Act::syntax)>;
+
+	}; /* namespace esp::console::Action */
+
+
+//	template <Act::define Action>
 	struct cmd: public esp_console_cmd_t
 	{
-	    // constructing cmd object for command execution w/o cintext
-	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			//esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-			/*Cmd_act&& *//*.argtable & .func*//* act *//*bt::syntax*//*,*/
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-							):
-		cmd(name, Action::invoke/*_impl*/, Action::syntax/*_st*/, help_str, hint_str)
-		{};
-
-	    // constructing cmd object for command execution w/o cintext
-	    cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//	//		esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-//			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-			/*Act_w_cntxt&& *//*.argtable & .func_w_context & .context*/ /*cntxtact*/ /*bt::syntax*//*,*/
-			void* /*.context*/ context,
-			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-							):
-		cmd(name, Action::contexted::invoke, Action::syntax/*_st*/, help_str, hint_str)
-		{};
-
-
 //	    template <class Syntax>
-	    template <Act::syntaxed Syntax>
+	    template <Action::syntable Syntax>
 	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-			esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
+		arg::table::act::invoke_func/*esp_console_cmd_func_t*/ /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
 			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
 			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
 			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
@@ -122,13 +89,13 @@ namespace esp
 		{};
 
 //	    template <class Syntax>
-	    template <Act::syntaxed Syntax>
+	    template <Action::syntable Syntax>
 	    cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
 //			esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-			esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
+			arg::table::act::contexted::invoke_func/*esp_console_cmd_func_with_context_t*/ /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
 			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
-			char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
+			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
+			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
 			void* /*.context*/ cntxt = nullptr
 							):
 		cmd(name, context_exe, syntax.keep.data(), help_str, hint_str)
@@ -137,69 +104,47 @@ namespace esp
 	    cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable = nullptr,
 			const char help_str[] = nullptr, const char hint_str[] = nullptr);
 	    cmd(char name[], esp_console_cmd_func_with_context_t context_exe, void* syntaxtable = nullptr,
-			char help_str[] = nullptr, char hint_str[] = nullptr, void* cntxt = nullptr);
+			const char help_str[] = nullptr, const char hint_str[] = nullptr, void* cntxt = nullptr);
 
 	    esp_err_t enreg() const;	///< register current command
 
 	    int errors() const { return errcnt; };
 
-	private:
+	protected:
 	    mutable int errcnt = 0;
 
 	}; /* template struct esp::console::cmd */
 
 
-	/// constructror for command execute w/o context
-//	template <Act_def Act>
-	template <Act::define Action>
-	inline cmd<Action>::cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable,
-			const char help_str[], const char hint_str[]):
-		esp_console_cmd_t {
-			.command = name,
-		        .help = help_str,
-		        .hint = hint_str,
-		        .func = exe,
-			.argtable = syntaxtable,
-			.func_w_context = nullptr,
-			.context = nullptr
-		}
-	{};
 
-	/// constructor for command execute implementation with context
-//	template <Act_def Act>
-	template <Act::define Action>
-	inline cmd<Action>::cmd(char name[], esp_console_cmd_func_with_context_t exec,
-			void* syntaxtable, char help_str[], char hint_str[], void* cntxt):
-		esp_console_cmd_t {
-			.command = name,
-		        .help = help_str,
-		        .hint = hint_str,
-		        .func = nullptr,
-			.argtable = syntaxtable,
-			.func_w_context = exec,
-			.context = cntxt
-		}
-	{};
-
-	//const esp::console::cmd bt_cmd ({
-	//	.command = "bt"/* | bluetooth"*/,
-	//        .help = "General Bluetooth command",
-	//        .hint = nullptr/*"Bluetooth command exec"*/,
-	//        .func = global_lambda,
-	//	.argtable = bt::syntax,
-	//	.func_w_context = nullptr,
-	//	.context = nullptr
-	//}); /* bt_cmd */
-
-	/// register the current command
-//	template <Act_def Act>
-	template <Act::define Act>
-	esp_err_t inline cmd<Act>::enreg() const
+	template <Action::def Act>
+	struct cmd_t: public esp::console::cmd
 	{
-	    return esp_console_cmd_register(this);
-	}; /* esp::console::cmd::enreg() */
+	    // constructing cmd object for command execution w/o cintext
+	    cmd_t(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
+		    //esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
+		    /*Cmd_act&& *//*.argtable & .func*//* act *//*bt::syntax*//*,*/
+		    const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
+		    const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
+	//	    esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
+	//	    void* /*.context*/ cntxt = nullptr
+								):
+		    cmd(name, Act::invoke, Act::syntax, help_str, hint_str)
+	    {};
 
+	    /// constructing cmd object for command execution with cintext
+	    cmd_t(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
+	//	//    esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
+	//	    esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
+		    /*Act_w_cntxt&& *//*.argtable & .func_w_context & .context*/ /*cntxtact*/ /*bt::syntax*//*,*/
+		    void* /*.context*/ context,
+		    const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
+		    const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
+			):
+		    cmd(name, Act::contexted::invoke, Act::syntax, help_str, hint_str)
+	    {};
 
+	}; /* template struct esp::console::cmd */
 
     }; /* namespace esp::console */
     

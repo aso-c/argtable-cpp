@@ -6,7 +6,7 @@
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
  *	      Updated 11.02.2025
- *	@version v.0.6.8
+ *	@version v.0.6.9
  */
 
 
@@ -76,83 +76,84 @@ namespace arg
 				std::same_as<Item, arg_date*>;
 
 
-	/// Syntax class definition
-	template <std::size_t sz>
-	class def
-	{
-	public:
-
-	    template <Entities... Items>
-	    def(Items&&... items/*, int n = 20*/):
-		keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
-		description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
-	    {};
-
-	    /// Copy constructor
-	    def(const def<sz>& other):
-		keep{other.keep},
-		description{other.description}
-	    {};
-	    /// Move constructor
-	    def(def<sz>&& other) noexcept:
-		keep{std::move(other.keep)},
-		description{std::move(other.description)}
-	    {};
-
-	    constexpr static std::size_t size() noexcept { return sz; };	///< for diagnostic purposes
-
-
-	    item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synatax item declarations
-
-	    item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
-
-	    /// print the [short] usage of the current syntax string
-	    void usage(FILE* fp, const char suffix[]) const {
-		arg_print_syntax(fp, std::get<struct arg_end*>(description.back()), suffix);
-	    };
-
-	    /// print the verbose usage of the current syntax string
-	    void verbose(FILE* fp, const char suffix[]) const {
-		arg_print_syntaxv(fp, std::get<struct arg_end*>(description.back()), suffix);
-	    };
-
-	    /// print the glossary for the syntax string
-	    void glossary(FILE* fp, const char format[]) const {
-		arg_print_glossary(fp, std::get<struct arg_end*>(description.back()), format);
-	    };
-
-	    int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
-
-	    /// check, if the syntax definitions - contained the NULL pointer items
-	    /// @return true (!NULL) - syntax definition row contain the NULL pointers
-	    ///		false (NULL) -  syntax definition row is NOT contained the NULL pointers
-	    bool nullcheck() const
+	    /// Syntax class definition
+	    template <std::size_t sz>
+	    class def
 	    {
-		return arg_nullcheck(keep.data());
-	    };
+	    public:
 
-	    int err() const { return errcnt; };	///< error status of the last operation
-	    int error() const { return errcnt; };	///< error status of the last operation
+		template <Entities... Items>
+		def(Items&&... items/*, int n = 20*/):
+		    keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
+		    description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
+		{};
 
-	    /// print the error status of the command line parsing
-	    void error(FILE* fp, const char pname[]) const {
-		arg_print_errors(fp, std::get<struct arg_end*>(description.back()), pname);
-	    };
+		/// Copy constructor
+		def(const def<sz>& other):
+		    keep{other.keep},
+		    description{other.description}
+		{};
+		/// Move constructor
+		def(def<sz>&& other) noexcept:
+		    keep{std::move(other.keep)},
+		    description{std::move(other.description)}
+		{};
 
-	    /// copy assignment operator
-	    def& operator=(const def<sz>& other);
-	    /// copy assignment operator
-	    def& operator=(def<sz>&& other);
+		/// size of the syntax type (qty of the significant items)
+		constexpr static std::size_t size() noexcept { return sz; };
 
-	private:
-	    mutable int errcnt = 0;
 
-	}; /* template struct arg::table::syntax::def */
+		item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synatax item declarations
 
-	template <typename ... Args>
+		item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
+
+		/// print the [short] usage of the current syntax string
+		void usage(FILE* fp, const char suffix[]) const {
+		    arg_print_syntax(fp, std::get<struct arg_end*>(description.back()), suffix);
+		};
+
+		/// print the verbose usage of the current syntax string
+		void verbose(FILE* fp, const char suffix[]) const {
+		    arg_print_syntaxv(fp, std::get<struct arg_end*>(description.back()), suffix);
+		};
+
+		/// print the glossary for the syntax string
+		void glossary(FILE* fp, const char format[]) const {
+		    arg_print_glossary(fp, std::get<struct arg_end*>(description.back()), format);
+		};
+
+		int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
+
+		/// check, if the syntax definitions - contained the NULL pointer items
+		/// @return true (!NULL) - syntax definition row contain the NULL pointers
+		///		false (NULL) -  syntax definition row is NOT contained the NULL pointers
+		bool nullcheck() const
+		{
+		    return arg_nullcheck(keep.data());
+		};
+
+		int err() const { return errcnt; };	///< error status of the last operation
+		int error() const { return errcnt; };	///< error status of the last operation
+
+		/// print the error status of the command line parsing
+		void error(FILE* fp, const char pname[]) const {
+		    arg_print_errors(fp, std::get<struct arg_end*>(description.back()), pname);
+		};
+
+		/// copy assignment operator
+		def& operator=(const def<sz>& other);
+		/// copy assignment operator
+		def& operator=(def<sz>&& other);
+
+	    private:
+		mutable int errcnt = 0;
+
+	    }; /* template struct arg::table::syntax::def */
+
+	    template <typename ... Args>
 	    def(Args*...) -> def<sizeof...(Args)>;
 
-	template <std::size_t sz>
+	    template <std::size_t sz>
 	    def(def<sz>&) -> def<sz>;
 	}; /* namespace arg::table::syntax */
 
@@ -182,105 +183,6 @@ namespace arg
 	{
 
 	}; /* struct arg::table::multisyntax */
-
-#if 0
-	/// alias for esp console command execution procedures
-	using act_invoke_func_t = esp_console_cmd_func_t;
-
-	template <auto extrasyntx>
-	class act_cmplx_t;
-#endif
-#if 0
-	namespace context
-	{
-	    /// alias for type of the esp console execution command w/context procedures
-	    using act_invoke_func_t = esp_console_cmd_func_with_context_t;
-
-	    /// Holder for invoke command with context
-	    struct act_t
-	    {
-	    public:
-
-		act_invoke_func_t invoke;	/// local object pointer to invoke() static implementation
-
-	    protected:
-		template <auto esyntx>
-		friend class table::act_cmplx_t;
-
-		act_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
-
-		/// Execute command procedure with the pointer to the own syntax object
-		static
-		esp_err_t invoke_impl(void* context, int argc, char* argv[]) { return ESP_OK;  };
-
-	    }; /* struct arg::table::context::act_t */
-
-	}; /* namespace arg::table::context */
-#endif
-#if 0
-	/// Define class for command action, procedures & templates with the syntaxes
-	template <auto extrasyntx>
-	class act_cmplx_t
-	{
-
-	protected:
-	    /// constructor
-	    act_cmplx_t(act_invoke_func_t ext_invoke = invoke_impl): invoke(ext_invoke) {};
-	    act_cmplx_t(context::act_invoke_func_t ext_cntxt_invoke): invoke(invoke_impl), context(ext_cntxt_invoke) {};
-
-	public:
-	    /// Generating of the singleton object for the derived class
-	    template <class act_class>
-	    static act_class& instance_impl() {
-		    static act_class single;
-
-		return single;
-	    }; /* template static arg::table::act_t::instance_imp() { */
-
-	    decltype(*extrasyntx) &syntax = *extrasyntx;/// used syntax object with object of the class act instantation
-	    constexpr decltype(*extrasyntx) static &syntax_st = *extrasyntx;/// used syntax object with object of the class act instantation
-
-	    act_invoke_func_t invoke;		/// local object pointer to invoke() static implementation
-
-	    context::act_t context;		/// class-holder for the invoke cmd-procedure with context
-
-	    /// Execute command procedure with the pointer to the own syntax object
-	    static
-	    esp_err_t invoke_impl(int argc, char* argv[]) { return ESP_OK;  };
-
-	    /// Run the Help procedure with the pointer to the own syntax object
-	    static
-	    esp_err_t help_impl(int argc, char* argv[]);
-
-	}; /* class arg::table::act_t */
-#endif
-#if 0
-	/// Specialization for the nullptr parameter
-	template <>
-	class act_cmplx_t<nullptr>
-	{
-	    /// stub type for zero syntax act_t specialization
-	    struct zero_syntax_stub
-	    {
-		void* data() { return nullptr; };
-	    }; /* act_t<nullptr>::zero_syntax_stub */
-
-	    zero_syntax_stub syntax;	///< stub for the "syntax" field of the act_t<nullptr> specialization
-
-	    act_invoke_func_t invoke;	// local object pointer to invoke() static implementation
-
-	    context::act_t context;	// class-holder for the invoke cmd-procedure with context
-
-
-	    /// Execute command procedure with the pointer to the own syntax object
-	    static
-	    esp_err_t invoke_impl(int argc, char* argv[]);
-
-	    /// Run the Help procedure with the pointer to the own syntax object
-	    static
-	    esp_err_t help_impl(int argc, char* argv[]);
-	}; /* class arg::table::act_cmplx_t<nullptr> */
-#endif
 
 
 	/// Constrains template concept arg::table::Syntaxes
@@ -318,8 +220,11 @@ namespace arg
 	}; /* template struct arg::table::act_t */
 
 	/// "Zero-syntax" specialization of the base for the command action/procedures
-	class act_zero
+	struct act
 	{
+	    /// type alias of the procedures for context-free esp console execution command
+	    using invoke_func = esp_console_cmd_func_t;
+
 	    /// stub type for zero syntax act_t specialization
 	    struct zero_syntax_stub
 	    {
@@ -337,13 +242,16 @@ namespace arg
 
 	    struct contexted
 	    {
+		/// type alias of the procedures for esp console execution command w/context
+		using invoke_func = esp_console_cmd_func_with_context_t;
+
 		/// Execute command procedure with the pointer to the own syntax object
 		static
 		esp_err_t invoke(void* context, int argc, char* argv[]);
 
 	    }; /* struct arg::table::act_zero::contexted */
 
-	}; /* struct arg::table::act_zero */
+	}; /* struct arg::table::act */
 
     };/* namespace arg::table */
 
