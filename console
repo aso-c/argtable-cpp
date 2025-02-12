@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.9
+ * @version 0.6.10
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 11.02.2025
+ *	    Updated: 12.02.2025
  */
 
 
@@ -62,7 +62,7 @@ namespace esp
 	    template <class Syntax>
 	    concept syntable = requires(Syntax syntax, void* buf)
 	    {
-		buf = /*Act::*/syntax.keep.data();
+		buf = syntax.keep.data();
 	    }; /* concept esp::console::Action::syntable */
 
 
@@ -94,7 +94,7 @@ namespace esp
 			const char help_str[] = nullptr, const char hint_str[] = nullptr, void* cntxt = nullptr);
 
 	    esp_err_t enreg() const;	///< register current command
-	   void enreg_chked() const {ESP_ERROR_CHECK(enreg());};	///< register current command with error checking
+	   void enreg_check() const {ESP_ERROR_CHECK(enreg());};	///< register current command with error checking
 
 	    int errors() const { return errcnt; };
 
@@ -108,17 +108,19 @@ namespace esp
 	template <Action::def Act>
 	struct cmd_t: public esp::console::cmd
 	{
-	    /// constructing cmd object for command execution w/o cintext
+	    /// constructing cmd object for command execution w/o context
+	    /// requires Action::nocontext
 	    cmd_t(const char name[], const char help_str[] = nullptr,
 		    const char hint_str[] = nullptr):
 		cmd(name, Act::invoke, Act::syntax, help_str, hint_str)
-	    {};
+	    { static_assert(Action::nocontext<Act>, "The Act type for cmd_t object must have a static method esp_err_t invoke(int, char* [])"); };
 
 	    /// constructing cmd object for command execution with cintext
+	    /// requires Action::contexted
 	    cmd_t(const char name[], void* context, const char help_str[] = nullptr,
 		    const char hint_str[] = nullptr):
 		cmd(name, Act::contexted::invoke, Act::syntax, help_str, hint_str)
-	    {};
+	    { static_assert(Action::contexted<Act>, "The Act type for cmd_t object must contain a subclass 'contexted' with a static method esp_err_t contexted::invoke(void*, int, char* [])"); };
 
 	}; /* template struct esp::console::cmd */
 

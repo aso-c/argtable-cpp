@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 11.02.2025
- *	@version v.0.6.9
+ *	      Updated 12.02.2025
+ *	@version v.0.6.10
  */
 
 
@@ -19,7 +19,7 @@
 
 #include <array>
 #include <list>
-
+#include <memory>
 
 //#include <string>
 #include <vector>
@@ -42,7 +42,18 @@ namespace arg
 
 	namespace item
 	{
-	    using holder = std::variant<struct arg_rem*, arg_lit*, arg_int*, arg_dbl*, arg_str*, arg_rex*, arg_file*, arg_date*, struct arg_end* >;
+	    using holder = std::variant< struct arg_rem* /*std::shared_ptr<struct arg_rem>*/,
+		    arg_lit* /*std::shared_ptr<arg_lit>*/,
+		    arg_int*/*std::shared_ptr<arg_int>*/,
+		    arg_dbl* /*std::shared_ptr<arg_dbl>*/,
+		    arg_str*/*std::shared_ptr<arg_str>*/,
+		    arg_rex* /*std::shared_ptr<arg_rex>*/,
+		    arg_file*/*std::shared_ptr<arg_file>*/,
+		    arg_date* /*std::shared_ptr<arg_date>*/,
+		    struct arg_end*  /*std::shared_ptr<struct arg_end>*/>;
+
+//	    template <typename Currit>
+//	    holder(Currit*) -> holder<std::shared_ptr<Currit>>;
 
 	    /// array of the syntax items
 	    template <std::size_t size>
@@ -86,6 +97,7 @@ namespace arg
 		def(Items&&... items/*, int n = 20*/):
 		    keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
 		    description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
+//		    description{std::shared_ptr(items)..., std::shared_ptr(reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)]))}
 		{};
 
 		/// Copy constructor
@@ -225,14 +237,22 @@ namespace arg
 	    /// type alias of the procedures for context-free esp console execution command
 	    using invoke_func = esp_console_cmd_func_t;
 
-	    /// stub type for zero syntax act_t specialization
-	    struct zero_syntax_stub
+
+	    /// placeholder for the inner class "syntax" - stab for empty syntax string
+	    struct Syntax
 	    {
-		void* data() { return nullptr; };
-	    }; /* act_t<nullptr>::zero_syntax_stub */
+		/// stub type for zero syntax act_t specialization
+		struct zero_syntax_keeper
+		{
+		    void* data() { return nullptr; };
+		}; /* arg::table::act::syntax::zero_syntax_keeper */
 
+		zero_syntax_keeper keep;
+	    }; /* arg::table::act::syntax */
 
-	    /// Execute command procedure with the pointer to the own syntax object
+	    static Syntax syntax;
+
+	    /// Execute command procedure without the syntax object (zero syntax)
 	    static
 	    esp_err_t invoke(int argc, char* argv[]);
 
@@ -249,7 +269,7 @@ namespace arg
 		static
 		esp_err_t invoke(void* context, int argc, char* argv[]);
 
-	    }; /* struct arg::table::act_zero::contexted */
+	    }; /* struct arg::table::act::contexted */
 
 	}; /* struct arg::table::act */
 
