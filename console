@@ -72,32 +72,19 @@ namespace esp
 	}; /* namespace esp::console::Action */
 
 
-//	template <Act::define Action>
 	struct cmd: public esp_console_cmd_t
 	{
-//	    template <class Syntax>
 	    template <Action::syntable Syntax>
-	    cmd(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-		arg::table::act::invoke_func/*esp_console_cmd_func_t*/ /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-//			esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-//			void* /*.context*/ cntxt = nullptr
-							):
+	    cmd(const char name[], arg::table::act::invoke_func exe,
+		    Syntax& syntax, const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr):
 		cmd(name, exe, syntax.keep.data(), help_str, hint_str)
-		{};
+	    {};
 
-//	    template <class Syntax>
 	    template <Action::syntable Syntax>
-	    cmd(/*.command =*/ char name[] /*"bt"*//* | bluetooth"*/,
-//			esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-			arg::table::act::contexted::invoke_func/*esp_console_cmd_func_with_context_t*/ /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-			Syntax& /*.argtable*/ syntax /*bt::syntax*/,
-			const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-			const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/,
-			void* /*.context*/ cntxt = nullptr
-							):
+	    cmd(char name[], arg::table::act::contexted::invoke_func context_exe,
+		    Syntax& syntax, const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr, void* cntxt = nullptr):
 		cmd(name, context_exe, syntax.keep.data(), help_str, hint_str)
 		{};
 
@@ -107,6 +94,7 @@ namespace esp
 			const char help_str[] = nullptr, const char hint_str[] = nullptr, void* cntxt = nullptr);
 
 	    esp_err_t enreg() const;	///< register current command
+	   void enreg_chked() const {ESP_ERROR_CHECK(enreg());};	///< register current command with error checking
 
 	    int errors() const { return errcnt; };
 
@@ -120,28 +108,16 @@ namespace esp
 	template <Action::def Act>
 	struct cmd_t: public esp::console::cmd
 	{
-	    // constructing cmd object for command execution w/o cintext
-	    cmd_t(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-		    //esp_console_cmd_func_t /*exec_t*/ /*.func*/ exe /*= global_lambda*/,
-		    /*Cmd_act&& *//*.argtable & .func*//* act *//*bt::syntax*//*,*/
-		    const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-		    const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-	//	    esp_console_cmd_func_with_context_t /*.func_w_context*/ context_exe /*= nullptr*/,
-	//	    void* /*.context*/ cntxt = nullptr
-								):
-		    cmd(name, Act::invoke, Act::syntax, help_str, hint_str)
+	    /// constructing cmd object for command execution w/o cintext
+	    cmd_t(const char name[], const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr):
+		cmd(name, Act::invoke, Act::syntax, help_str, hint_str)
 	    {};
 
 	    /// constructing cmd object for command execution with cintext
-	    cmd_t(/*.command =*/ const char name[] /*"bt"*//* | bluetooth"*/,
-	//	//    esp_console_cmd_func_t /*.func*/ exe /*= global_lambda*/,
-	//	    esp_console_cmd_func_with_context_t /*cntxt_exec_t*/ /*.func_w_context*/ context_exe /*= nullptr*/,
-		    /*Act_w_cntxt&& *//*.argtable & .func_w_context & .context*/ /*cntxtact*/ /*bt::syntax*//*,*/
-		    void* /*.context*/ context,
-		    const char /*.help*/ help_str[] = nullptr /*"General Bluetooth command"*/,
-		    const char /*.hint*/ hint_str[] = nullptr /*"Bluetooth command exec"*/
-			):
-		    cmd(name, Act::contexted::invoke, Act::syntax, help_str, hint_str)
+	    cmd_t(const char name[], void* context, const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr):
+		cmd(name, Act::contexted::invoke, Act::syntax, help_str, hint_str)
 	    {};
 
 	}; /* template struct esp::console::cmd */
