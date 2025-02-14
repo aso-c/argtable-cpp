@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 12.02.2025
- *	@version v.0.6.10
+ *	      Updated 14.02.2025
+ *	@version v.0.6.11
  */
 
 
@@ -134,7 +134,7 @@ namespace arg
 		    arg_print_glossary(fp, std::get<struct arg_end*>(description.back()), format);
 		};
 
-		int parse(int argc, char* argv[]) const;	///< parsing the sended parameters
+		int parse(int argc, char* argv[]) /*const*/;	///< parsing the sended parameters
 
 		/// check, if the syntax definitions - contained the NULL pointer items
 		/// @return true (!NULL) - syntax definition row contain the NULL pointers
@@ -203,6 +203,8 @@ namespace arg
 	concept Syntaxes = std::same_as<TSyntax, syntax::def<TSyntax::size()>>;
 
 	/// Define base template struct for command action, procedures & templates with the syntaxes
+	/// type aggregate the static syntax field and the static method invoke for declarated command executing
+	/// and inner struct contexted with static method contexted::invoke for command execution with context
 	template <Syntaxes auto &Syntax>
 	struct act_t
 	{
@@ -278,8 +280,8 @@ namespace arg
 
     ///< parsing the sended parameters
     template <std::size_t size>
-    inline int table::syntax::def<size>::parse(int argc, char* argv[]) const {
-	return (errcnt = arg_parse(argc, argv, const_cast<void**>(keep.data())));
+    inline int table::syntax::def<size>::parse(int argc, char* argv[]) {
+	return (errcnt = arg_parse(argc, argv, keep.data()));
     }; /* table::syntax_t<Args...>::parse() */
 
 

@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.10
+ * @version 0.6.11
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 12.02.2025
+ *	    Updated: 14.02.2025
  */
 
 
@@ -72,26 +72,34 @@ namespace esp
 	}; /* namespace esp::console::Action */
 
 
+	/// simple core C++ wrapper on the esp_console_cmd_t
 	struct cmd: public esp_console_cmd_t
 	{
 	    template <Action::syntable Syntax>
-	    cmd(const char name[], arg::table::act::invoke_func exe,
-		    Syntax& syntax, const char help_str[] = nullptr,
-		    const char hint_str[] = nullptr):
-		cmd(name, exe, syntax.keep.data(), help_str, hint_str)
+	    cmd(const char name[], Syntax& syntax, arg::table::act::invoke_func exe,
+		    const char help_str[] = nullptr, const char hint_str[] = nullptr):
+		cmd(name, syntax.keep.data(), exe, help_str, hint_str)
 	    {};
 
 	    template <Action::syntable Syntax>
-	    cmd(char name[], arg::table::act::contexted::invoke_func context_exe,
-		    Syntax& syntax, const char help_str[] = nullptr,
-		    const char hint_str[] = nullptr, void* cntxt = nullptr):
-		cmd(name, context_exe, syntax.keep.data(), help_str, hint_str)
+	    cmd(char name[], Syntax& syntax, arg::table::act::contexted::invoke_func exe_context,
+		    void* context, const char help_str[] = nullptr, const char hint_str[] = nullptr):
+		cmd(name, syntax.keep.data(), exe_context, context, help_str, hint_str)
 		{};
-
-	    cmd(const char name[], esp_console_cmd_func_t exe, void* syntaxtable = nullptr,
+	    /// Simple constructor for context-free command variant - individual field initialization
+	    cmd(const char name[], void* syntaxtable[], esp_console_cmd_func_t exe,
 			const char help_str[] = nullptr, const char hint_str[] = nullptr);
-	    cmd(char name[], esp_console_cmd_func_with_context_t context_exe, void* syntaxtable = nullptr,
-			const char help_str[] = nullptr, const char hint_str[] = nullptr, void* cntxt = nullptr);
+	    /// Simple constructor for contexted command variant - individual field initialization
+	    cmd(char name[], void* syntaxtable[], esp_console_cmd_func_with_context_t context_exe,
+		    void* context, const char help_str[] = nullptr, const char hint_str[] = nullptr);
+	    /// Individual field initialization constructor with zero-syntax for context-free command variant
+	    cmd(const char name[], esp_console_cmd_func_t exe, const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr):
+			cmd(name, nullptr, exe, help_str, hint_str) {};
+	    /// Individual field initialization constructor with zero-syntax for contexted command variant
+	    cmd(char name[], esp_console_cmd_func_with_context_t context_exe, void* context, const char help_str[] = nullptr,
+		    const char hint_str[] = nullptr):
+			cmd(name, nullptr, context_exe, context, help_str, hint_str) {};
 
 	    esp_err_t enreg() const;	///< register current command
 	   void enreg_check() const {ESP_ERROR_CHECK(enreg());};	///< register current command with error checking
@@ -112,14 +120,14 @@ namespace esp
 	    /// requires Action::nocontext
 	    cmd_t(const char name[], const char help_str[] = nullptr,
 		    const char hint_str[] = nullptr):
-		cmd(name, Act::invoke, Act::syntax, help_str, hint_str)
+		cmd(name, Act::syntax, Act::invoke, help_str, hint_str)
 	    { static_assert(Action::nocontext<Act>, "The Act type for cmd_t object must have a static method esp_err_t invoke(int, char* [])"); };
 
 	    /// constructing cmd object for command execution with cintext
 	    /// requires Action::contexted
 	    cmd_t(const char name[], void* context, const char help_str[] = nullptr,
 		    const char hint_str[] = nullptr):
-		cmd(name, Act::contexted::invoke, Act::syntax, help_str, hint_str)
+		cmd(name, Act::syntax, Act::contexted::invoke, context, help_str, hint_str)
 	    { static_assert(Action::contexted<Act>, "The Act type for cmd_t object must contain a subclass 'contexted' with a static method esp_err_t contexted::invoke(void*, int, char* [])"); };
 
 	}; /* template struct esp::console::cmd */

@@ -15,9 +15,9 @@
  * CONDITIONS OF ANY KIND, either express or implied.
  *
  * @author: Solomatov A.A. (aso)
- * @version 0.6.9
+ * @version 0.6.11
  * @date Created on: 25 дек. 2024 г.
- *	    Updated: 11.02.2025
+ *	    Updated: 12.02.2025
  */
 
 //#include <stdint.h>
@@ -47,7 +47,7 @@ namespace esp
     {
 
 	/// constructror for command execute w/o context
-	cmd::cmd(const char name[], arg::table::act::invoke_func exe, void* syntaxtable,
+	cmd::cmd(const char name[], void* syntaxtable[], arg::table::act::invoke_func exe,
 			const char help_str[], const char hint_str[]):
 		esp_console_cmd_t {
 			.command = name,
@@ -61,8 +61,8 @@ namespace esp
 	{};
 
 	/// constructor for command execute implementation with context
-	cmd::cmd(char name[], arg::table::act::contexted::invoke_func exec,
-			void* syntaxtable, const char help_str[], const char hint_str[], void* cntxt):
+	cmd::cmd(char name[], void* syntaxtable[], arg::table::act::contexted::invoke_func exec,
+			void* cntxt, const char help_str[], const char hint_str[]):
 		esp_console_cmd_t {
 			.command = name,
 		        .help = help_str,
