@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 14.02.2025
- *	@version v.0.6.11
+ *	      Updated 17.02.2025
+ *	@version v.0.6.12
  */
 
 
@@ -94,10 +94,15 @@ namespace arg
 	    public:
 
 		template <Entities... Items>
-		def(Items&&... items/*, int n = 20*/):
-		    keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(20/*n*/))},
+		def(int n, Items&&... items):
+		    keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(n/*cargendef*/))},
 		    description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
 //		    description{std::shared_ptr(items)..., std::shared_ptr(reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)]))}
+		{};
+
+		template <Entities... Items>
+		def(Items&&... items/*, int n = 20*/):
+		    def(cargendef, std::forward<Items>(items)...)
 		{};
 
 		/// Copy constructor
@@ -157,6 +162,9 @@ namespace arg
 		/// copy assignment operator
 		def& operator=(def<sz>&& other);
 
+		/// default value for argend counter
+		constexpr static int cargendef = 20;
+
 	    private:
 		mutable int errcnt = 0;
 
@@ -165,8 +173,20 @@ namespace arg
 	    template <typename ... Args>
 	    def(Args*...) -> def<sizeof...(Args)>;
 
+	    template <typename ... Args>
+	    def(int, Args*...) -> def<sizeof...(Args)>;
+
 	    template <std::size_t sz>
 	    def(def<sz>&) -> def<sz>;
+
+//	    template <Entities... Items>
+//	    def(Items*..., const int n) -> def<sizeof...(Items), n>;
+
+//	    template <Entities... Items>
+//	    def(Items*...) -> def<sizeof...(Items)>;
+
+//	    template <Entities... Items>
+//	    def(int, Items*...) -> def<sizeof...(Items)>;
 	}; /* namespace arg::table::syntax */
 
 	/// copy assignment operator inline implementation
