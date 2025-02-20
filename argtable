@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 17.02.2025
- *	@version v.0.6.12
+ *	      Updated 20.02.2025
+ *	@version v.0.7
  */
 
 
@@ -42,15 +42,27 @@ namespace arg
 
 	namespace item
 	{
-	    using holder = std::variant< struct arg_rem* /*std::shared_ptr<struct arg_rem>*/,
-		    arg_lit* /*std::shared_ptr<arg_lit>*/,
-		    arg_int*/*std::shared_ptr<arg_int>*/,
-		    arg_dbl* /*std::shared_ptr<arg_dbl>*/,
-		    arg_str*/*std::shared_ptr<arg_str>*/,
-		    arg_rex* /*std::shared_ptr<arg_rex>*/,
-		    arg_file*/*std::shared_ptr<arg_file>*/,
-		    arg_date* /*std::shared_ptr<arg_date>*/,
-		    struct arg_end*  /*std::shared_ptr<struct arg_end>*/>;
+	    using lit  = std::shared_ptr<struct arg_lit>;
+	    using integer = std::shared_ptr<struct arg_int>;
+	    using dbl  = std::shared_ptr<struct arg_dbl>;
+	    using str  = std::shared_ptr<struct arg_str>;
+	    using rex  = std::shared_ptr<struct arg_rex>;
+	    using file = std::shared_ptr<struct arg_file>;
+	    using date = std::shared_ptr<struct arg_date>;
+	    using rem  = std::shared_ptr<struct arg_rem>;
+	    using end  = std::shared_ptr<struct arg_end>;
+
+
+	    using holder = std::variant<rem, lit, integer, dbl, str, rex, file, date, end>;
+//	    using holder = std::variant<std::shared_ptr<struct arg_rem>,
+//		    std::shared_ptr<struct arg_lit>,
+//		    std::shared_ptr<struct arg_int>,
+//		    std::shared_ptr<arg_dbl>,
+//		    std::shared_ptr<arg_str>,
+//		    std::shared_ptr<arg_rex>,
+//		    std::shared_ptr<arg_file>,
+//		    std::shared_ptr<arg_date>,
+//		    std::shared_ptr<struct arg_end>>;
 
 //	    template <typename Currit>
 //	    holder(Currit*) -> holder<std::shared_ptr<Currit>>;
@@ -76,6 +88,7 @@ namespace arg
 	namespace syntax
 	{
 
+	    /// Strong restrictions: only stored pointers are accepted
 	    template <typename Item>
 	    concept Entities = std::same_as<Item, struct arg_rem* > ||
 				std::same_as<Item, arg_lit*> ||
@@ -85,6 +98,15 @@ namespace arg
 				std::same_as<Item, arg_rex*> ||
 				std::same_as<Item, arg_file*>||
 				std::same_as<Item, arg_date*>;
+
+	    /// Rest restrictions: extended with the 'int' type
+	    template <typename Item>
+	    concept Entities_rest = Entities<Item> || std::same_as<Item, int>;
+
+//	    /// Constrains template concept arg::table::Syntaxes
+//	    /// for a template struct arg::table::act_t
+//	    template <typename Container>
+//	    concept Syntaxlike = std::same_as<Container, syntax::def<TSyntax::size()>>;
 
 
 	    /// Syntax class definition
@@ -96,13 +118,12 @@ namespace arg
 		template <Entities... Items>
 		def(int n, Items&&... items):
 		    keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(n/*cargendef*/))},
-		    description{items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
-//		    description{std::shared_ptr(items)..., std::shared_ptr(reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)]))}
+		    description {std::shared_ptr<typename std::remove_pointer<Items>::type>(items)..., std::shared_ptr<struct arg_end>(reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)]))}
 		{};
 
 		template <Entities... Items>
 		def(Items&&... items/*, int n = 20*/):
-		    def(cargendef, std::forward<Items>(items)...)
+		    def(defargendc, std::forward<Items>(items)...)
 		{};
 
 		/// Copy constructor
@@ -119,9 +140,7 @@ namespace arg
 		/// size of the syntax type (qty of the significant items)
 		constexpr static std::size_t size() noexcept { return sz; };
 
-
-		item::keeper_t<sz+1>  keep;		///< array of void* pointers to a synatax item declarations
-
+		item::keeper_t<sz+1>	keep;		///< array of void* pointers to a synatax item declarations
 		item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
 
 		/// print the [short] usage of the current syntax string
@@ -139,7 +158,7 @@ namespace arg
 		    arg_print_glossary(fp, std::get<struct arg_end*>(description.back()), format);
 		};
 
-		int parse(int argc, char* argv[]) /*const*/;	///< parsing the sended parameters
+		int parse(int argc, char* argv[]);	///< parsing the sended parameters
 
 		/// check, if the syntax definitions - contained the NULL pointer items
 		/// @return true (!NULL) - syntax definition row contain the NULL pointers
@@ -153,17 +172,17 @@ namespace arg
 		int error() const { return errcnt; };	///< error status of the last operation
 
 		/// print the error status of the command line parsing
-		void error(FILE* fp, const char pname[]) const {
-		    arg_print_errors(fp, std::get<struct arg_end*>(description.back()), pname);
+		void errors(FILE* fp, const char pname[]) const {
+		    arg_print_errors(fp, std::get<arg::table::item::end/*struct arg_end*/>(description.back()).get(), pname);
 		};
 
 		/// copy assignment operator
 		def& operator=(const def<sz>& other);
-		/// copy assignment operator
+		/// move assignment operator
 		def& operator=(def<sz>&& other);
 
 		/// default value for argend counter
-		constexpr static int cargendef = 20;
+		constexpr static int defargendc = 20;
 
 	    private:
 		mutable int errcnt = 0;
@@ -175,6 +194,9 @@ namespace arg
 
 	    template <typename ... Args>
 	    def(int, Args*...) -> def<sizeof...(Args)>;
+
+	    template <typename ... Args>
+	    def(Args*..., int) -> def<sizeof...(Args)>;
 
 	    template <std::size_t sz>
 	    def(def<sz>&) -> def<sz>;
