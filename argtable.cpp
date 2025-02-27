@@ -5,8 +5,8 @@
  * 	@file	argtable.cpp
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 20.02.2025
- *	@version 0.7
+ *	      Updated 27.02.2025
+ *	@version 0.7.3
  */
 
 

@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 25.02.2025
- *	@version v.0.7.2
+ *	      Updated 27.02.2025
+ *	@version v.0.7.3
  */
 
 
@@ -62,6 +62,19 @@ namespace arg
 			    std::same_as<Item, struct arg_file*>||
 			    std::same_as<Item, struct arg_date*>;
 
+	/// Type of the entity is a pointer to the arg_end struct
+	template <typename Item>
+	concept EndEntity = std::same_as<Item, struct arg_end*>;
+
+	/// Type of the entity is a pointer to the arg_end struct
+	template <typename Item>
+	concept IntEntity = std::same_as<Item, int>;
+
+	/// Extended restrictions: add pointer to the arg_end struct
+	template <typename Item>
+	concept Entities_ext = Entities<Item> || EndEntity<Item>;
+
+
 	template <typename Item>
 	concept Holded = std::same_as<Item, rem> ||
 			    std::same_as<Item, lit> ||
@@ -73,25 +86,61 @@ namespace arg
 			    std::same_as<Item, date>||
 			    std::same_as<Item, end>;
 
-	/// Extended restrictions: add pointer to the arg_end struct
-	template <typename Item>
-	concept Entities_ext = Entities<Item> || std::same_as<Item, struct arg_end*>;
-
 
 	namespace item
 	{
 
-//	    using holder = std::variant<rem, lit, integer, dbl, str, rex, file, date, end>;
 	    struct holder: public std::variant<rem, lit, integer, dbl, str, rex, file, date, end>
 	    {
+		/// deleter for the artable items
+		template <typename Item>
+		    requires (Entities<Item> || EndEntity<Item>)
+		struct del {
+		    void operator()(Item item) const {
+			arg_freetable(reinterpret_cast<void**>(&item), 1); };
+		}; /* struct arg::table::item::holder::del */
+
+		template <typename Item>
+		    requires (Entities<Item*> || EndEntity<Item*>)
+		del() ->  del<Item*>;
+
+		/// Create the 'hoder' object with the raw pointer to a arg_xxx struct
+		template <typename Entity>
+		    requires (Entities<Entity*> || EndEntity<Entity*>)
+		holder(Entity* pentity):
+		    std::variant<rem, lit, integer, dbl, str, rex, file, date, end>(std::shared_ptr<Entity>(pentity, del<Entity*>()))
+		{};
+
+		/// Create the 'hoder' object that hold a pointer to the struct arg_end created with ecnt value
+		holder(int ecnt):
+		    holder(arg_end(ecnt))
+		{};
+
+		/// copy/move constructor
 		template <typename Item>
 		requires Holded<Item>
-		holder(Item&& item): std::variant<rem, lit, integer, dbl, str, rex, file, date, end>(std::forward<Item>(item)) {};
+		holder(Item&& item):
+		    std::variant<rem, lit, integer, dbl, str, rex, file, date, end>(std::forward<Item>(item))
+		{};
 
-		template <typename Entity>
-		requires Entities<Entity*>
-		holder(Entity*&& entity): std::variant<rem, lit, integer, dbl, str, rex, file, date, end>(std::shared_ptr<Entity>(std::forward<Entity>(entity))) {};
-	    }; /* struct arg::table::holder */
+		/// the 'get' method
+		template <typename Item>
+		    requires Entities<Item*> || EndEntity<Item*>
+		Item& get() {return *std::get<std::shared_ptr<Item>>(*this);};
+
+		/// specialization of the 'get' method: get arg_xxx structs
+		struct arg_lit& aslit() {return *std::get<std::shared_ptr<struct arg_lit>>(*this);};
+		struct arg_int& asint() {return *std::get<std::shared_ptr<struct arg_int>>(*this);};
+		struct arg_dbl& asdbl() {return *std::get<std::shared_ptr<struct arg_dbl>>(*this);};
+		struct arg_str& asstr() {return *std::get<std::shared_ptr<struct arg_str>>(*this);};
+		struct arg_rex& asrex() {return *std::get<std::shared_ptr<struct arg_rex>>(*this);};
+		struct arg_file& asfile() {return *std::get<std::shared_ptr<struct arg_file>>(*this);};
+		struct arg_date& asdate() {return *std::get<std::shared_ptr<struct arg_date>>(*this);};
+		struct arg_rem& asrem() {return *std::get<std::shared_ptr<struct arg_rem>>(*this);};
+		struct arg_end& asend() {return *std::get<std::shared_ptr<struct arg_end>>(*this);};
+
+	    }; /* struct arg::table::item::holder */
+
 
 	    /// array of the syntax items
 	    template <std::size_t size>
@@ -107,6 +156,8 @@ namespace arg
 	}; /* namespace arg::table::item */
 
 
+	//item::holder test(arg_end(12));
+	//item::row test_row = {(arg_lit*)nullptr, (arg_str*)nullptr, (arg_rex*)nullptr, (struct arg_int*)nullptr, arg_end(12)};
 
 	/// Rest restrictions: extended with the 'int' type
 	template <typename Item>
@@ -119,22 +170,10 @@ namespace arg
 	{
 	public:
 
-	    /// deleter for the artable items
-	    template <Entities_ext Item>
-	    struct del
-	    {
-		void operator()(Item item) const
-		{
-		    arg_freetable(reinterpret_cast<void**>(&item), 1);
-		}; /* void operator()(Item* item) const */
-	    }; /* struct arg::table::syntax::del */
-	    template <Entities_ext Item>
-	    del() ->  del<Item>;
-
 	    template <Entities... Items>
 	    syntax(int n, Items&&... items):
-		keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(n/*cargendef*/))},
-		description {std::shared_ptr<std::remove_pointer_t<Items>>(items, del<Items>())..., std::shared_ptr<struct arg_end>(reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)]))}
+		keep{reinterpret_cast<void*>(items)..., reinterpret_cast<void*>(arg_end(n))},
+		description {items..., reinterpret_cast<struct arg_end*>(keep[sizeof...(Items)])}
 	    {};
 
 	    template <Entities... Items>
