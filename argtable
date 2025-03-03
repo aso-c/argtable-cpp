@@ -5,8 +5,8 @@
  * 	@file	argtable
  *	@author	(Solomatov A.A. (aso)
  *	@date Created 08.10.2024
- *	      Updated 27.02.2025
- *	@version v.0.7.3
+ *	      Updated 03.03.2025
+ *	@version v.0.7.4
  */
 
 
@@ -126,21 +126,43 @@ namespace arg
 		/// the 'get' method
 		template <typename Item>
 		    requires Entities<Item*> || EndEntity<Item*>
-		Item& get() {return *std::get<std::shared_ptr<Item>>(*this);};
+		inline Item& get();
 
 		/// specialization of the 'get' method: get arg_xxx structs
-		struct arg_lit& aslit() {return *std::get<std::shared_ptr<struct arg_lit>>(*this);};
-		struct arg_int& asint() {return *std::get<std::shared_ptr<struct arg_int>>(*this);};
-		struct arg_dbl& asdbl() {return *std::get<std::shared_ptr<struct arg_dbl>>(*this);};
-		struct arg_str& asstr() {return *std::get<std::shared_ptr<struct arg_str>>(*this);};
-		struct arg_rex& asrex() {return *std::get<std::shared_ptr<struct arg_rex>>(*this);};
-		struct arg_file& asfile() {return *std::get<std::shared_ptr<struct arg_file>>(*this);};
-		struct arg_date& asdate() {return *std::get<std::shared_ptr<struct arg_date>>(*this);};
-		struct arg_rem& asrem() {return *std::get<std::shared_ptr<struct arg_rem>>(*this);};
-		struct arg_end& asend() {return *std::get<std::shared_ptr<struct arg_end>>(*this);};
+		auto& aslit() {return get<struct arg_lit>();};
+		auto& asint() {return get<struct arg_int>();};
+		auto& asdbl() {return get<struct arg_dbl>();};
+		auto&  astr() {return get<struct arg_str>();};
+		auto& asrex() {return get<struct arg_rex>();};
+		auto& asfile() {return get<struct arg_file>();};
+		auto& asdate() {return get<struct arg_date>();};
+		auto& asrem() {return get<struct arg_rem>();};
+		auto& asend() {return get<struct arg_end>();};
 
 	    }; /* struct arg::table::item::holder */
 
+	    /// the 'get'static procedure
+	    template <typename Item>
+		requires Entities<Item*> || EndEntity<Item*>
+	    constexpr std::shared_ptr<Item>& get(holder& hold) {return std::get<std::shared_ptr<Item>>(hold);};
+
+	    /// the 'arg::table::item::holder::get' method
+	    template <typename Item>
+		requires Entities<Item*> || EndEntity<Item*>
+	    inline Item& holder::get() {
+		return *std::get<std::shared_ptr<Item>>(*this);
+	    };
+
+	    /// specialization of the 'get' procedure: get arg_xxx structs
+	    constexpr auto& aslit(holder& hold) {return get<struct arg_lit>(hold);};
+	    constexpr auto& asint(holder& hold) {return get<struct arg_int>(hold);};
+	    constexpr auto& asdbl(holder& hold) {return get<struct arg_dbl>(hold);};
+	    constexpr auto& asstr(holder& hold) {return get<struct arg_str>(hold);};
+	    constexpr auto& asrex(holder& hold) {return get<struct arg_rex>(hold);};
+	    constexpr auto& asfile(holder& hold) {return get<struct arg_file>(hold);};
+	    constexpr auto& asdate(holder& hold) {return get<struct arg_date>(hold);};
+	    constexpr auto& asrem(holder& hold) {return get<struct arg_rem>(hold);};
+	    constexpr auto& asend(holder& hold) {return get<struct arg_end>(hold);};
 
 	    /// array of the syntax items
 	    template <std::size_t size>
@@ -198,7 +220,7 @@ namespace arg
 	    item::keeper_t<sz+1>	keep;	///< array of void* pointers to a synatax item declarations
 	    item::row<sz + 1>	description;	///< array with pointers to syntax item declarations (std::variant to argtable types)
 
-	    item::holder& operator[] (std::size_t idx) { return description[idx]; };
+	    constexpr item::holder& operator[] (std::size_t idx) { return description[idx]; };
 
 	    /// print the [short] usage of the current syntax string
 	    void usage(FILE* fp, const char suffix[]) const {
